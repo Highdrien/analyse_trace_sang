@@ -9,24 +9,18 @@ from torchmetrics import Accuracy, F1Score, Precision, Recall
 class Accuracy_per_class:
     def __init__(self, num_classes):
         self.num_classes = num_classes
-        self.accuracy = Accuracy()
 
     def __call__(self, y_pred, y_true):
-        # Convert y_true to a tensor if it's not already a tensor
-        if not isinstance(y_true, torch.Tensor):
-            y_true = torch.tensor(y_true)
-
         # Convert y_true to an integer tensor
         y_true = y_true.long()
 
         per_label_accuracies = torch.zeros(self.num_classes)
-
-        for i in range(self.num_classes):
-            label_true = (y_true == i).long()
-            label_pred = (y_pred == i).long()
-
-            if label_true.numel() > 0:  # Check if there are elements for this class
-                per_label_accuracies[i] = self.accuracy(label_pred.float(), label_true)
+        
+        for label in range(self.num_classes):
+            # Compute the accuracy for each class
+            correct = (y_pred[y_true == label] == label).sum()
+            total = (y_true == label).sum()
+            per_label_accuracies[label] = correct / total if total > 0 else 0
 
         return per_label_accuracies
 
@@ -34,7 +28,8 @@ class Accuracy_per_class:
 class Metrics:
     def __init__(self,
                  num_classes: int,
-                 run_argmax_on_y_true: bool=True) -> None:
+                 run_argmax_on_y_true: bool=True,
+                 run_acc_per_class: bool=False) -> None:
 
         micro = {'task': 'multiclass', 'average': 'micro', 'num_classes': num_classes}
         macro = {'task': 'multiclass', 'average': 'macro', 'num_classes': num_classes}
@@ -47,10 +42,12 @@ class Metrics:
         
         self.metrics_onehot = {'top k micro': Accuracy(top_k=3, **micro),
                                'top k macro': Accuracy(top_k=3, **macro)}
+        if run_acc_per_class:
+            self.metrics_per_class = {'acc per class': Accuracy_per_class(num_classes=num_classes)}
+            self.num_metrics = len(self.metrics_onehot) + len(self.metrics) + len(self.metrics_per_class)
+        else:
+            self.num_metrics = len(self.metrics_onehot) + len(self.metrics)
         
-        self.metrics_per_class = {'acc per class': Accuracy_per_class(num_classes=num_classes)}
-        
-        self.num_metrics = len(self.metrics_onehot) + len(self.metrics) + len(self.metrics_per_class)  # Update the number of metrics
         self.metrics_name = list(self.metrics_onehot.keys()) + list(self.metrics.keys()) + list(self.metrics_per_class.keys())  # Update the list of metric names
         self.run_argmax_on_y_true = run_argmax_on_y_true
     
@@ -73,9 +70,10 @@ class Metrics:
         for metric in self.metrics.values():
             metrics_value.append(metric(y_pred, y_true).item())
         
-        for metric in self.metrics_per_class.values():  # Compute per-class accuracy
-            metrics_value.append(metric(y_pred, y_true).mean().item())
-        
+        if self.run_argmax_on_y_true:
+            for metric in self.metrics_per_class.values():  # Compute per-class accuracy
+                metrics_value.append(metric(y_pred, y_true).item())
+            
         return np.array(metrics_value)
     
     def get_names(self) -> List[str]:
@@ -109,11 +107,13 @@ if __name__ == '__main__':
     num_classes = 19
     y_pred = torch.rand(size=(batch_size, num_classes))
     y_true = torch.randint(num_classes, size=(batch_size,))
-    print('y_true', y_true.shape)
-    print('y_pred', y_pred.shape)
+    # print('y_true', y_true.shape)
+    # print(y_true)
+    # print('y_pred', y_pred.shape)
+    # print(y_pred)
     
     print(Accuracy_per_class(num_classes=num_classes)(y_pred, y_true))
     
-    metrics = Metrics(num_classes=num_classes, run_argmax_on_y_true=False)
+    metrics = Metrics(num_classes=num_classes, run_argmax_on_y_true=False, run_acc_per_class=True)
     metrics_value = metrics.compute(y_pred, y_true)
     print(metrics.get_info(metrics_value))
