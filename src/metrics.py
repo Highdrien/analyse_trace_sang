@@ -7,22 +7,28 @@ from torchmetrics import Accuracy, F1Score, Precision, Recall
 
 
 class Accuracy_per_class:
-    def __init__(self, num_classes):
+    def __init__(self, num_classes: int) -> None:
         self.num_classes = num_classes
 
-    def __call__(self, y_pred, y_true):
+    def __call__(self, y_pred: Tensor, y_true: Tensor) -> List[float]:
         # Convert y_true to an integer tensor
         y_true = y_true.long()
 
-        per_label_accuracies = torch.zeros(self.num_classes)
+        per_label_accuracies = []
         
         for label in range(self.num_classes):
             # Compute the accuracy for each class
             correct = (y_pred[y_true == label] == label).sum()
             total = (y_true == label).sum()
-            per_label_accuracies[label] = correct / total if total > 0 else 0
+            per_label_accuracies.append((correct / total).item() if total > 0 else 0)
 
         return per_label_accuracies
+    
+    def get_metrics_name(self) -> List[str]:
+        metrics_name = []
+        for i in range(self.num_classes):
+            metrics_name.append(f'acc class n°{i + 1}')
+        return metrics_name
 
 
 class Metrics:
@@ -43,13 +49,15 @@ class Metrics:
         self.metrics_onehot = {'top k micro': Accuracy(top_k=3, **micro),
                                'top k macro': Accuracy(top_k=3, **macro)}
         if run_acc_per_class:
-            self.metrics_per_class = {'acc per class': Accuracy_per_class(num_classes=num_classes)}
-            self.num_metrics = len(self.metrics_onehot) + len(self.metrics) + len(self.metrics_per_class)
+            self.metrics_per_class = Accuracy_per_class(num_classes=num_classes)
+            self.num_metrics = len(self.metrics_onehot) + len(self.metrics) + num_classes
+            self.metrics_name = list(self.metrics_onehot.keys()) + list(self.metrics.keys()) + self.metrics_per_class.get_metrics_name()
         else:
             self.num_metrics = len(self.metrics_onehot) + len(self.metrics)
+            self.metrics_name = list(self.metrics_onehot.keys()) + list(self.metrics.keys())
         
-        self.metrics_name = list(self.metrics_onehot.keys()) + list(self.metrics.keys()) + list(self.metrics_per_class.keys())  # Update the list of metric names
         self.run_argmax_on_y_true = run_argmax_on_y_true
+        self.run_acc_per_class = run_acc_per_class
     
     def compute(self,
                 y_pred: Tensor,
@@ -70,10 +78,10 @@ class Metrics:
         for metric in self.metrics.values():
             metrics_value.append(metric(y_pred, y_true).item())
         
-        if self.run_argmax_on_y_true:
-            for metric in self.metrics_per_class.values():  # Compute per-class accuracy
-                metrics_value.append(metric(y_pred, y_true).item())
-            
+        if self.run_acc_per_class:
+            metric_per_class = self.metrics_per_class(y_pred, y_true)
+            metrics_value += metric_per_class
+
         return np.array(metrics_value)
     
     def get_names(self) -> List[str]:
@@ -87,13 +95,11 @@ class Metrics:
             self.metrics_onehot[key] = self.metrics_onehot[key].to(device)
         for key in self.metrics.keys():
             self.metrics[key] = self.metrics[key].to(device)
-        for key in self.metrics_per_class.keys():  # Move per-class accuracy to the specified device
-            self.metrics_per_class[key].accuracy = self.metrics_per_class[key].accuracy.to(device)
 
     def get_info(self, metrics_value: np.ndarray) -> str:
         if len(metrics_value) != self.num_metrics:
             raise ValueError(f'metrics_value doesnt have the same length as num_metrics.',
-                             f'{len(metrics_value) = }\t and \t{self.num_metrics = }')
+                             f'{len(metrics_value) = } and {self.num_metrics = }')
         
         output = 'Metrics \t: Values\n'
         output += '-' * 15 + ' | ' + '-' * 4 + '\n'

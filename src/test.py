@@ -36,7 +36,9 @@ def test(config: EasyDict, logging_path: str) -> None:
     criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
     # Get metrics
-    metrics = Metrics(num_classes=config.data.num_classes, run_argmax_on_y_true=False)
+    metrics = Metrics(num_classes=config.data.num_classes,
+                      run_argmax_on_y_true=False,
+                      run_acc_per_class=True)
     metrics.to(device)
 
     test_loss = 0
