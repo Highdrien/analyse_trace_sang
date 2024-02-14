@@ -14,14 +14,17 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from config.config import load_config, find_config
 from src import train, train_adversarial, test
 from config.config import test_logger
-from src.dataloader.dataloader import create_dataloader
+from src.dataloader.dataloader import LABELS
 from metrics import Metrics
 from src.model import resnet
 from utils import utils
 import numpy as np
-
+from src.infer import infer
+from PIL import ImageEnhance
 
 st.title("Image Classification App")
+
+st.sidebar.title("Image Transformations")
 
 # Path to the training data
 train_data_path = 'data/data_retouche/train_512'
@@ -33,8 +36,8 @@ list_paths = [os.path.join('data/data_labo', folder) for folder in os.listdir('d
 train_data_path = st.selectbox("Select the training data path", list_paths)
 
 # Get the list of directories in the training data path
-class_names = [name for name in os.listdir(train_data_path) if os.path.isdir(os.path.join(train_data_path, name))]
-
+#class_names = [name for name in os.listdir(train_data_path) if os.path.isdir(os.path.join(train_data_path, name))]
+class_names = LABELS
 #print the class names
 print(class_names)
 
@@ -53,8 +56,30 @@ config_file = st.selectbox("Select Config", config_options)
 
 # Image upload
 image_file = st.file_uploader("Upload Image", type=['png', 'jpg', 'jpeg'])
+print("IMAGE FILE: ", image_file)
 if image_file is not None:
     image = Image.open(image_file)
+    # Add sliders for image transformations
+    rotation = st.sidebar.slider('Rotation', min_value=0, max_value=180, value=0)
+    hflip = st.sidebar.checkbox('Horizontal Flip', value=False)
+    vflip = st.sidebar.checkbox('Vertical Flip', value=False)
+    contrast = st.sidebar.slider('Contrast', min_value=-3.0, max_value=3.0, value=1.0)
+    brightness = st.sidebar.slider('Brightness', min_value=-3.0, max_value=3.0, value=1.0)
+
+
+    #apply the transformations
+    #Apply transformations to the image
+    image = image.rotate(rotation)
+    if hflip:
+        image = image.transpose(Image.FLIP_LEFT_RIGHT)
+    if vflip:
+        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+
+    enhancer_contrast = ImageEnhance.Contrast(image)
+    image = enhancer_contrast.enhance(contrast)
+    enhancer_brightness = ImageEnhance.Brightness(image)
+    image = enhancer_brightness.enhance(brightness)
+
     st.image(image, caption='Uploaded Image.', use_column_width=True)
 
 # Inference button
@@ -75,13 +100,12 @@ if st.button("Inference"):
         model = model.to(device)
         del weight
 
-        print("max of image: ", np.array(image).max())
-        print("min of image: ", np.array(image).min())
-       
+
         # Prepare image
-        image = torch.from_numpy(np.array(image)/255).float()
-        image = image.permute(2, 0, 1).unsqueeze(0).to(device)
-       
+        transform = transforms.Compose([transforms.ToTensor()])
+        #apply the transform to the image
+        image = transform(image).unsqueeze(0).to(device)
+
         print("image.shape: ", image.shape)
         print("image", image)
 
@@ -90,9 +114,9 @@ if st.button("Inference"):
         with torch.no_grad():
             y_pred = model.forward(image)
 
-        st.balloons()
+        #st.balloons()
 
         # Display result
-        res=class_names[y_pred.argmax(dim=1).item()]
+        res=class_names[y_pred.argmax(dim=-1).item()]
         st.success(f"**This image is classified as:** {res}")
 
