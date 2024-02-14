@@ -2,24 +2,24 @@ import os
 import sys
 import time
 from tqdm import tqdm
-from icecream import ic
 from easydict import EasyDict
 from os.path import dirname as up
 
 import torch
-from torch.optim.lr_scheduler import MultiStepLR
 
-sys.path.append(up(os.path.abspath(__file__)))
+sys.path.append(up(up(up(os.path.abspath(__file__)))))
 
 from config.config import train_step_logger, train_logger
 from src.dataloader.dataloader import create_dataloader
-from metrics import Metrics
+from src.metrics import Metrics
 from src.model import resnet
 from utils import utils, plot_learning_curves
 
 
 def train(config: EasyDict) -> None:
-
+    if config.model.name != 'resnet':
+        raise ValueError(f"Expected model.name=resnet but found {config.model.name}.")
+    
     device = utils.get_device(device_config=config.learning.device)
 
     # Get data
@@ -37,7 +37,6 @@ def train(config: EasyDict) -> None:
 
     # Optimizer and Scheduler
     optimizer = torch.optim.Adam(model.get_learned_parameters(), lr=config.learning.learning_rate_resnet)
-    scheduler = MultiStepLR(optimizer, milestones=config.learning.milestones, gamma=config.learning.gamma)
 
     # Get metrics
     metrics = Metrics(num_classes=config.data.num_classes, run_argmax_on_y_true=False)
@@ -111,8 +110,6 @@ def train(config: EasyDict) -> None:
                 current_loss = val_loss / (i + 1)
                 val_range.set_description(f"VAL   -> epoch: {epoch} || loss: {current_loss:.4f}")
                 val_range.refresh()
-        
-        scheduler.step()
 
         val_loss = val_loss / n_val
         val_metrics = val_metrics / n_val   

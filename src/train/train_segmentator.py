@@ -1,39 +1,28 @@
 import os
 import sys
-import time
+import yaml
 import numpy as np
 from tqdm import tqdm
-from icecream import ic
-from itertools import chain
 from easydict import EasyDict
+import matplotlib.pyplot as plt
 from os.path import dirname as up
-import yaml
-from explainable.create_mask import segment_image_file, plot_img_and_mask,batched_segmentation
 
 import torch
-from torch import Tensor
 from torch.optim import Adam
-import matplotlib.pyplot as plt
-import numpy as np
 
-#add one level above directory to the path
+sys.path.append(up(up(up(os.path.abspath(__file__)))))
 
-sys.path.append(up(up(__file__)))
-
-
-
-from config.config import train_step_logger, train_logger
+from src.explainable.create_mask import batched_segmentation
 from src.dataloader.dataloader import create_dataloader
-from metrics import Metrics
-from src.model import resnet, adversarial,segmentation_model
 from src.model.segmentation_model import UNet, Classifier
-from utils import utils, plot_learning_curves
+from utils import utils
 
-
-import matplotlib.pyplot as plt
-from tqdm import tqdm
 
 def train(config: EasyDict, unet: UNet, classifier: Classifier, k: float, pretrain_epochs: int,train_epochs: int,fine_tuning: bool = True) -> None:
+    
+    if config.model.name != 'unet':
+        raise ValueError(f"Expected model.name=unet but found {config.model.name}.")
+    
     # Get data
     train_generator = create_dataloader(config=config, mode='train')
     val_generator = create_dataloader(config=config, mode='val')
@@ -54,9 +43,8 @@ def train(config: EasyDict, unet: UNet, classifier: Classifier, k: float, pretra
     print("nb_parameters of classif:",classifier.count_parameters())
     
 
-
     # Get and put on device
-    device='cuda'
+    device = utils.get_device(device_config=config.learning.device)
     unet.to(device) 
     classifier.to(device)
 

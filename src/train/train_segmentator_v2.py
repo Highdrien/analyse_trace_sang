@@ -1,38 +1,23 @@
 import os
 import sys
-import time
+import yaml
 import numpy as np
 from tqdm import tqdm
-from icecream import ic
-from itertools import chain
 from easydict import EasyDict
+import matplotlib.pyplot as plt
 from os.path import dirname as up
-import yaml
-from explainable.create_mask import segment_image_file, plot_img_and_mask,batched_segmentation
 
 import torch
-from torch import Tensor
-from torch.optim import Adam
-import matplotlib.pyplot as plt
-import numpy as np
-
-#add one level above directory to the path
-
-sys.path.append(up(up(__file__)))
-
-
-
-from config.config import train_step_logger, train_logger
-from src.dataloader.dataloader import create_dataloader
-from metrics import Metrics
-from src.model import resnet, adversarial,segmentation_model
-from src.model.segmentation_model import UNet, Classifier
-from utils import utils, plot_learning_curves
-
-
-import matplotlib.pyplot as plt
-from tqdm import tqdm
 from torch import nn
+from torch.optim import Adam
+
+sys.path.append(up(up(up(os.path.abspath(__file__)))))
+
+from src.explainable.create_mask import batched_segmentation
+from src.dataloader.dataloader import create_dataloader
+from src.model.segmentation_model import UNet, Classifier
+from utils import utils
+
 
 class DiceLoss(nn.Module):
     def __init__(self, eps=1e-7):
@@ -40,7 +25,6 @@ class DiceLoss(nn.Module):
         self.eps = eps
 
     def forward(self, output, target):
-        # Apply sigmoid activation
         output = torch.sigmoid(output)
         
         intersection = (output * target).sum()
@@ -49,7 +33,15 @@ class DiceLoss(nn.Module):
         return 1.0 - dice
 
 
-def train(config: EasyDict, unet: UNet, classifier: Classifier, alpha: float = 0.5) -> None:
+def train(config: EasyDict,
+          unet: UNet,
+          classifier: Classifier,
+          alpha: float = 0.5
+          ) -> None:
+    
+    if config.model.name != 'unet':
+        raise ValueError(f"Expected model.name=unet but found {config.model.name}.")
+
     # Get data
     train_generator = create_dataloader(config=config, mode='train')
     test_generator = create_dataloader(config=config, mode='test')
@@ -57,29 +49,24 @@ def train(config: EasyDict, unet: UNet, classifier: Classifier, alpha: float = 0
     print(f"Found {n_train} training batches")
 
     # Loss
-    #criterion_unet = torch.nn.BCEWithLogitsLoss()
-    criterion_unet= DiceLoss()
+    criterion_unet = DiceLoss()
     criterion_classif = torch.nn.CrossEntropyLoss()
-    # Replace CrossEntropyLoss with KLDivLoss
-    criterion_KL = torch.nn.KLDivLoss(reduction='batchmean')
+    # criterion_KL = torch.nn.KLDivLoss(reduction='batchmean')
 
     # Optimizer
     unet_optimizer = Adam(unet.parameters(), lr=0.001)
     classifier_optimizer = Adam(classifier.parameters(), lr=0.001)
 
     # Get and put on device
-    device='cuda'
+    device = utils.get_device(device_config=config.learning.device)
     unet.to(device) 
     classifier.to(device)
-
-    #number of epochs
-    epochs=5
 
     # Lists to store losses
     train_losses = []
 
     # Train unet and classifier on the data
-    for epoch in tqdm(range(1, epochs+1)):
+    for epoch in tqdm(range(1, config.learning.epochs + 1)):
         train_loss = 0
         train_range = tqdm(train_generator)
 
@@ -135,7 +122,7 @@ def train(config: EasyDict, unet: UNet, classifier: Classifier, alpha: float = 0
         unet.eval()  # Set the model to evaluation mode
 
         with torch.no_grad():  # No need to track gradients
-            x,y,z = next(iter(test_dataloader))  # We take only the first batch
+            x, y, z = next(iter(test_dataloader))  # We take only the first batch
             x = x.to(device)  # Move the images to the device
             pred = unet(x)  # Apply the model
             pred = torch.sigmoid(pred)  # Apply sigmoid to get pixel probabilities
@@ -156,14 +143,15 @@ def train(config: EasyDict, unet: UNet, classifier: Classifier, alpha: float = 0
 
     # Plotting
     plt.figure(figsize=(12, 6))
-    plt.plot(range(1, epochs + 1), train_losses, label='Training Loss')
+    plt.plot(range(1, config.learning.epochs + 1), train_losses, label='Training Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
     plt.show()
 
 if __name__=="__main__":
-    unet=UNet()
-    classifier=Classifier(num_classes=4)
+    unet = UNet()
+    classifier = Classifier(num_classes=4)
     config = EasyDict(yaml.safe_load(open('config/config.yaml')))  # Load config file
-    train(config=config, unet=unet, classifier=classifier,alpha=0.3)  # Train the model
+    config.model.name = 'unet'
+    train(config=config, unet=unet, classifier=classifier, alpha=0.3)  # Train the model

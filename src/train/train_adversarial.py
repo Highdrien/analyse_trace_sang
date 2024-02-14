@@ -12,17 +12,20 @@ import torch
 from torch import Tensor
 from torch.optim import Adam
 
-sys.path.append(up(os.path.abspath(__file__)))
-sys.path.append(up(up(os.path.abspath(__file__))))
+# sys.path.append(up(os.path.abspath(__file__)))
+# sys.path.append(up(up(os.path.abspath(__file__))))
+sys.path.append(up(up(up(os.path.abspath(__file__)))))
 
 from config.config import train_step_logger, train_logger
 from src.dataloader.dataloader import create_dataloader
-from metrics import Metrics
+from src.metrics import Metrics
 from src.model import resnet, adversarial
 from utils import utils, plot_learning_curves
 
 
 def train(config: EasyDict) -> None:
+    if config.model.name != 'adversarial':
+        raise ValueError(f"Expected model.name=adversarial but found {config.model.name}.")
 
     # Get data
     train_generator = create_dataloader(config=config, mode='train')
@@ -101,8 +104,6 @@ def train(config: EasyDict) -> None:
             train_metrics += np.concatenate((np.array([res_loss.item(), adv_loss.item()]),
                                              res_metrics.compute(y_pred=res_pred, y_true=res_true),
                                              adv_metrics.compute(y_pred=adv_pred, y_true=adv_true)))
-            ic(train_metrics)
-            exit()
 
             current_loss = train_loss / (i + 1)
             train_range.set_description(f"TRAIN -> epoch: {epoch} || loss: {current_loss:.4f}")
@@ -179,4 +180,5 @@ def train(config: EasyDict) -> None:
 if __name__ == '__main__':
     import yaml
     config = EasyDict(yaml.safe_load(open('config/config.yaml')))  # Load config file
+    config.model.name = 'adversarial' 
     train(config=config)

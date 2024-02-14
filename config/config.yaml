@@ -1,6 +1,6 @@
 data:
   path: data/data_labo
-  image_size: 256
+  image_size: 512
   num_classes: 19
   background_classes: 4
   transforms:
@@ -14,7 +14,7 @@ data:
       hue: 0.0
 
 model:
-  name: resnet    # choose between resnet and adversarial
+  name: resnet    # choose between resnet, adversarial, unet
   resnet:
     hidden_size: 64
     p_dropout: 0.1
@@ -30,9 +30,7 @@ learning:
   shuffle: true 
   drop_last: true
   device: cuda
-  milestones: [50, 75]
-  gamma: 0.1
-  save_experiment: true
+  save_experiment: false
   save_checkpoint: true
   loss: crossentropy
   num_workers: 2
