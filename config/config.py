@@ -88,7 +88,7 @@ def train_step_logger(path: str,
     """
     writes loss and metrics values in the train_log.csv
     """
-    with open(os.path.join(path, 'train_log.csv'), 'a') as file:
+    with open(os.path.join(path, 'train_log.csv'), 'a', encoding='utf8') as file:
         line = str(epoch) + ',' + str(train_loss) + ',' + str(val_loss)
         for i in range(len(train_metrics)):
             line += ',' + str(train_metrics[i])
@@ -101,7 +101,7 @@ def test_logger(path: str, metrics: List[str], values: List[float]) -> None:
     """
     creates a file 'test_log.txt' in the path containing for each line: metrics[i]: values[i]
     """
-    with open(os.path.join(path, 'test_log.txt'), 'a') as f:
+    with open(os.path.join(path, 'test_log.txt'), 'a', encoding='utf8') as f:
         for i in range(len(metrics)):
             f.write(metrics[i] + ': ' + str(values[i]) + '\n')
 
