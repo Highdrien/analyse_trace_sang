@@ -3,7 +3,6 @@ import sys
 import time
 import numpy as np
 from tqdm import tqdm
-from icecream import ic
 from itertools import chain
 from easydict import EasyDict
 from os.path import dirname as up
@@ -12,8 +11,6 @@ import torch
 from torch import Tensor
 from torch.optim import Adam
 
-# sys.path.append(up(os.path.abspath(__file__)))
-# sys.path.append(up(up(os.path.abspath(__file__))))
 sys.path.append(up(up(up(os.path.abspath(__file__)))))
 
 from config.config import train_step_logger, train_logger
