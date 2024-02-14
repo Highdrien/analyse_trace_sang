@@ -1,6 +1,33 @@
 import cv2
 import numpy as np
+from typing import Callable, List
 from scipy.ndimage import center_of_mass as calculate_center_of_mass
+
+
+class Critieres:
+    def __init__(self) -> None:
+
+        self.crits: dict[str, Callable] = {
+            'ovality': calculate_ovality,
+            'satellites': count_satellites,
+            'irregularity': calculate_irregularity,
+            'ratio': calculate_satellite_ratio,
+            'homogeneity': calculate_homogeneity,
+            'striation': count_internal_striations,
+            'distrib': classify_distribution,
+        }
+    
+    def get_critieres_name(self) -> List[str]:
+        return self.crits.keys()
+    
+    def __len__(self) -> int:
+        return len(self.crits)
+    
+    def get_critieres(self, mask: np.ndarray) -> List[float]:
+        output = np.zeros(len(self))
+        for i, function in enumerate(self.crits.values()):
+            output[i] = function[mask]
+        return output
 
 
 def generate_random_mask(size: int,
