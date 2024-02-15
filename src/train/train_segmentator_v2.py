@@ -19,6 +19,14 @@ from src.model.segmentation_model import UNet, Classifier
 from utils import utils
 
 
+class CustomCrossEntropyLoss(nn.Module):
+    def __init__(self):
+        super(CustomCrossEntropyLoss, self).__init__()
+
+    def forward(self, input, target):
+        return -(target * torch.log(input)).sum(dim=1).mean()
+
+
 class DiceLoss(nn.Module):
     def __init__(self, eps=1e-7):
         super().__init__()
@@ -48,10 +56,14 @@ def train(config: EasyDict,
     n_train = len(train_generator)
     print(f"Found {n_train} training batches")
 
+    # Number of classes
+    num_classes = 4
+
     # Loss
     criterion_unet = DiceLoss()
     criterion_classif = torch.nn.CrossEntropyLoss()
-    # criterion_KL = torch.nn.KLDivLoss(reduction='batchmean')
+    criterion_classif_2 = CustomCrossEntropyLoss()
+    criterion_KL = torch.nn.KLDivLoss(reduction='batchmean')
 
     # Optimizer
     unet_optimizer = Adam(unet.parameters(), lr=0.001)
@@ -65,6 +77,15 @@ def train(config: EasyDict,
     # Lists to store losses
     train_losses = []
 
+
+    #debugging
+    torch.autograd.set_detect_anomaly(True)
+
+    # Create a batch of uniform distributions
+    batch_size = 8
+    uniform_distribution = torch.ones(batch_size, num_classes).to(device) / num_classes  # create a uniform distribution
+        
+
     # Train unet and classifier on the data
     for epoch in tqdm(range(1, config.learning.epochs + 1)):
         train_loss = 0
@@ -72,51 +93,52 @@ def train(config: EasyDict,
 
         unet.train()
         classifier.train()
-        for i, (x, y,back_true) in enumerate(train_range): #x est l'image, y est la classe de l'image, back_true est le background de l'image
-            #print("shape de x",x.shape)
-            #print("shape de y",y.shape)
-            #print("shape de back_true",back_true.shape)
-            segm_mask=batched_segmentation(x).long()
-            x,back_true, y = x.to(device),back_true.to(device), y.to(device)
 
-            # 1/ Predict the mask with the Unet
+        # Avant la boucle d'entraînement, on met les gradients à zéro
+        unet_optimizer.zero_grad()
+        classifier_optimizer.zero_grad()
+
+        for i, (x, y, back_true) in enumerate(train_range):
+            segm_mask = batched_segmentation(x).long()
+            x, back_true, y = x.to(device), back_true.to(device), y.to(device)
+
+            # Prédiction du masque à partir de x
             pred = unet(x)
+            segm_mask = segm_mask.to(device).float()
 
-            segm_mask = segm_mask.to(device) # Move to device the image and the segmentation mask
+            # Calcul de la loss entre le masque prédit et le vrai masque (dice loss)
+            loss_unet = criterion_unet(pred, segm_mask)
+            loss_unet.backward(retain_graph=True)  # Rétropropagation de la loss
+            unet_optimizer.step()  # Mise à jour des poids du unet
+            unet_optimizer.zero_grad()  # Remise à zéro des gradients du unet
 
+            # Multiplication de x par le masque prédit
+            roi = x * pred  # .detach() pour ne pas suivre les gradients
+            # Par celle-ci
             
-            # 2/bis Use the predicted mask to extract the region of interest from the original image
-            # The mask is binary (0 and 1), so we can use it as a multiplier to keep the region of interest and set the rest to 0
-            roi = x * pred
 
-            # 2/ Predict the background with the classifier exemple: [0.0,0.3,0.7,0.0]
+            # Prédiction de la classe à partir du produit
             class_pred = classifier(roi)
 
-            # 3/ Backpropagate the loss of the classifier in the classifier
+            # Calcul de la loss du classifieur
             loss_classif = criterion_classif(class_pred, back_true)
-            loss_classif.backward(retain_graph=True) 
-            classifier_optimizer.step()
-            classifier_optimizer.zero_grad()
+            loss_classif.backward(retain_graph=True)  # Rétropropagation de la loss
+            classifier_optimizer.step()  # Mise à jour des poids du classifieur
+            classifier_optimizer.zero_grad()  # Remise à zéro des gradients du classifieur
 
-            # 4/ Backpropagate the loss of the Unet - alpha * the loss of the classifier in the classifier then in the Unet without changing the weights of the classifier but updating those of the UNet
-            loss_unet = criterion_unet(pred, segm_mask.float())
-
-            #POSSIBILITE 1: On entraine le Unet a tromper le classifier sur le background qu'il prédit
-            loss = loss_unet - alpha * loss_classif.detach()
-
-            #POSSIBILITE 2: On entraine le Unet a tromper le classifier en le forçant à prédire la distribution uniforme des backgrounds (équivalent à ne pas savoir quel est le background)
-            #loss =loss_unet +alpha * criterion_KL(class_pred,back_true)
-            loss.backward()
-            unet_optimizer.step()
-            unet_optimizer.zero_grad()
+            # Calcul de la loss finale
+            loss = loss_unet.detach() + alpha * criterion_classif_2(class_pred, uniform_distribution)
+            loss.backward()  # Rétropropagation de la loss
+            unet_optimizer.step()  # Mise à jour des poids du unet
+            classifier_optimizer.step()  # Mise à jour des poids du classifieur
 
             train_loss += loss.item()
-
             current_loss = train_loss / (i + 1)
             train_range.set_description(f"TRAIN -> epoch: {epoch} || loss: {current_loss:.4f}")
             train_range.refresh()
 
         train_losses.append(train_loss / n_train)
+
 
     def test_model(unet, test_dataloader, device='cuda'):
         unet.eval()  # Set the model to evaluation mode
@@ -150,6 +172,16 @@ def train(config: EasyDict,
     plt.show()
 
 if __name__=="__main__":
+
+
+
+    #test the custom loss
+    #y_pred=torch.tensor([[[[0.1,0.2],[0.3,0.4]]]])
+    #y_true=torch.tensor([[[[0,1],[1,0]]]])
+    #print("cutsom crossentropy loss:",CustomCrossEntropyLoss()(y_pred,y_true))
+
+
+
     unet = UNet()
     classifier = Classifier(num_classes=4)
     config = EasyDict(yaml.safe_load(open('config/config.yaml')))  # Load config file

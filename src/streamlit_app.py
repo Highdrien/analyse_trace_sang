@@ -7,14 +7,16 @@ from easydict import EasyDict
 import torch
 import sys
 from torch import Tensor
+import cv2
 
 #add the one level up directory to the sys path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from config.config import load_config, find_config
-from src import train, train_adversarial, test
+#from src.train import train_adversarial, test
 from config.config import test_logger
 from src.dataloader.dataloader import LABELS
+from src.explainable.create_mask import mask_red_pixel_hsv
 from metrics import Metrics
 from src.model import resnet
 from utils import utils
@@ -25,6 +27,12 @@ from PIL import ImageEnhance
 st.title("Image Classification App")
 
 st.sidebar.title("Image Transformations")
+
+# Ajoutez ces lignes après les autres contrôles de la barre latérale
+hue_min = st.sidebar.slider('Hue Min', min_value=0, max_value=180, value=0)
+hue_max = st.sidebar.slider('Hue Max', min_value=0, max_value=180, value=180)
+plot_mask = st.sidebar.checkbox('Plot Mask', value=False)
+
 
 # Path to the training data
 train_data_path = 'data/data_retouche/train_512'
@@ -59,6 +67,8 @@ image_file = st.file_uploader("Upload Image", type=['png', 'jpg', 'jpeg'])
 print("IMAGE FILE: ", image_file)
 if image_file is not None:
     image = Image.open(image_file)
+    # Convertissez l'image PIL en tableau numpy pour l'utiliser avec OpenCV
+    image_np = np.array(image)
     # Add sliders for image transformations
     rotation = st.sidebar.slider('Rotation', min_value=0, max_value=180, value=0)
     hflip = st.sidebar.checkbox('Horizontal Flip', value=False)
@@ -79,6 +89,21 @@ if image_file is not None:
     image = enhancer_contrast.enhance(contrast)
     enhancer_brightness = ImageEnhance.Brightness(image)
     image = enhancer_brightness.enhance(brightness)
+
+    # Appliquez le masque si le bouton "plot mask" est coché
+    if plot_mask:
+        mask = mask_red_pixel_hsv(image_np, hue_min, hue_max)
+    
+        # Créez une image de superposition verte avec le masque
+        overlay = np.zeros_like(image_np)
+        overlay[mask > 0] = (0, 255, 0)  # Vert en RGB
+        
+        # Superposez le masque à l'image originale
+        alpha = 0.5  # Définissez l'alpha pour la transparence
+        image_np = cv2.addWeighted(overlay, alpha, image_np, 1 - alpha, 0)
+        
+        # Convertissez l'image numpy en image PIL pour l'afficher avec Streamlit
+        image = Image.fromarray(image_np)
 
     st.image(image, caption='Uploaded Image.', use_column_width=True)
 

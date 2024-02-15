@@ -1,6 +1,6 @@
 data:
   path: data/data_labo
-  image_size: 512
+  image_size: 256
   num_classes: 19
   background_classes: 4
   transforms:

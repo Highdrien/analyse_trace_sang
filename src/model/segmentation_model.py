@@ -49,6 +49,8 @@ class Classifier(nn.Module):
         x = F.adaptive_avg_pool2d(x, (1, 1))
         x = x.view(x.shape[0], -1)
         x = self.fc(x)
+        #add softmax activation
+        x = F.softmax(x, dim=1)
         return x
     
     def count_parameters(self):
