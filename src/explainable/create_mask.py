@@ -13,6 +13,14 @@ from sklearn.metrics import silhouette_score
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+from skimage.draw import ellipse
+
+
+import numpy as np
+from skimage import filters
+from skimage.measure import label, regionprops
+from skimage.draw import ellipse_perimeter
+
 
 def segment_image_kmeans(image: np.ndarray, max_clusters: int = 10) -> list:
     # Reshape the image to be a list of RGB values
@@ -146,14 +154,78 @@ def mask_red_pixel_hsv(image: np.ndarray, red_lower: int, red_upper: int) -> np.
     # Convert the image from RGB to HSV
     hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
 
+     # Adjust the red_upper value to ensure inclusivity within the HSV range
+    if red_upper == 180:
+        red_upper -= 1
+
     # Define the range for red hues
-    lower_red = np.array([red_lower, 50, 50])
+    lower_red = np.array([red_lower, 0, 0])
     upper_red = np.array([red_upper, 255, 255])
 
     # Create a mask for pixels within the red hue range
     mask = cv2.inRange(hsv_image, lower_red, upper_red)
+   
 
     return mask
+
+
+def advanced_mask_red_pixel(image: np.ndarray) -> np.ndarray:
+
+    # Convert the image to HSV
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Improve the contrast
+    contrast_image = cv2.convertScaleAbs(hsv_image, alpha=1.5, beta=0)
+
+    # Convert the image to grayscale
+    gray_image = cv2.cvtColor(contrast_image, cv2.COLOR_BGR2GRAY)
+
+    # Apply Otsu's thresholding
+    _, binary_image = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # Find contours using Suzuki's algorithm
+    contours, _ = cv2.findContours(binary_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Draw contours on the original image
+    contour_image = np.copy(image)
+    # Create an empty image to draw the contours
+   
+    cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 3)
+
+    # Label the image
+    label_image = label(binary_image)
+
+    # Fit an ellipse to each region and draw it on the image
+
+    # Create an empty image to draw the ellipses
+    ellipse_image = np.zeros_like(image)
+        
+    for region in regionprops(label_image):
+        if region.area >= 50:
+            y0, x0 = region.centroid
+            orientation = region.orientation
+            x1 = x0 + np.cos(orientation) * 0.5 * region.minor_axis_length
+            y1 = y0 - np.sin(orientation) * 0.5 * region.minor_axis_length
+            x2 = x0 - np.sin(orientation) * 0.5 * region.major_axis_length
+            y2 = y0 - np.cos(orientation) * 0.5 * region.major_axis_length
+
+            minor_axis = max(int(abs(y1-y0)), 1)
+            major_axis = max(int(abs(x2-x0)), 1)
+
+            rr, cc = ellipse(int(y0), int(x0), minor_axis, major_axis, rotation=-orientation)
+            contour_image[rr, cc] = (255, 0, 0)
+
+    # Blend the original image and the ellipse image
+    overlay = cv2.addWeighted(image, 0.7, ellipse_image, 0.3, 0)
+ 
+    # Save the result
+    cv2.imwrite('result.jpg', overlay)
+    #plot the mask and the image
+    plt.figure()
+    plt.imshow(contour_image)
+    plt.show()
+
+
 
 def plot_img_and_mask(img: ndarray, mask: ndarray) -> None:
     mul = 255 if mask.max() < 1.01 else 1
@@ -185,35 +257,38 @@ def get_random_img(data_path: str) -> ndarray:
 if __name__ == '__main__':
     test_path = os.path.join('data', 'data_labo', 'test_256')
     image = get_random_img(test_path)
-    print("shape of image used",np.shape(image) )
 
-    #use the kmeans algorithm to segment the image
-    masks = segment_image_kmeans(image)
+    print("advanced mask red pixel",advanced_mask_red_pixel(image))
 
-    print("shape of first mask final",np.shape(masks[0][0]))
-    print("longueur de la liste de mask",len(masks))
+    # print("shape of image used",np.shape(image) )
 
-    #find the mask with the most red pixels
-    mask = find_top_masks(image,masks[0])
+    # #use the kmeans algorithm to segment the image
+    # masks = segment_image_kmeans(image)
 
-    #plot the image and the mask
-    plot_img_and_mask(image, mask)
+    # print("shape of first mask final",np.shape(masks[0][0]))
+    # print("longueur de la liste de mask",len(masks))
 
-    # Plot the image and the masks
-    plot_img_and_mask(image, masks[0])
-    plot_img_and_mask(image, masks[1])
-    plot_img_and_mask(image, masks[2])
+    # #find the mask with the most red pixels
+    # #mask = find_top_masks(image,masks[0])
+
+    # #plot the image and the mask
+    # #plot_img_and_mask(image, mask)
+
+    # # Plot the image and the masks
+    # #plot_img_and_mask(image, masks[0])
+    # #plot_img_and_mask(image, masks[1])
+    # #plot_img_and_mask(image, masks[2])
 
 
 
-    # Convert the image to a tensor, add an extra dimension to simulate a batch, and transpose to PyTorch format
-    image_tensor = torch.from_numpy(image.transpose((2, 0, 1))).unsqueeze(0)
+    # # Convert the image to a tensor, add an extra dimension to simulate a batch, and transpose to PyTorch format
+    # image_tensor = torch.from_numpy(image.transpose((2, 0, 1))).unsqueeze(0)
 
-    # Apply batched segmentation
-    mask_tensor = batched_segmentation(image_tensor)
+    # # Apply batched segmentation
+    # mask_tensor = batched_segmentation(image_tensor)
 
-    # Convert the mask tensor back to a numpy array, remove the extra dimension, and transpose back to image format
-    mask = mask_tensor.numpy().squeeze(0).transpose((1, 2, 0))
+    # # Convert the mask tensor back to a numpy array, remove the extra dimension, and transpose back to image format
+    # mask = mask_tensor.numpy().squeeze(0).transpose((1, 2, 0))
 
-    # Plot the image and the mask
-    plot_img_and_mask(image, mask)
+    # # Plot the image and the mask
+    # plot_img_and_mask(image, mask)
