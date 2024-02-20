@@ -1,5 +1,5 @@
-learning_rate,batch_size,dropout,epochs,gamma,milestones_0,milestones_1,final_val_metric
-0.001,64,0.1,10,0.1,50,75,0.5
-0.001,64,0.5,10,0.1,50,75,0.7
-0.001,64,0.5,20,0.1,50,75,0.75
-0.001,64,0.5,10,0.2,50,75,0.6
+image_size,brightness,contrast,hidden_size,p_dropout,epochs,batch_size,learning_rate_resnet,last_validation_metric
+256,0.5,0.5,64,0.1,10,8,0.01,0.8786496350364964
+256,0.5,0.5,64,0.1,10,8,0.001,0.9215328467153284
+256,0.5,0.5,64,0.1,10,8,0.0001,0.8868613138686131
+256,0.5,0.5,64,0.1,10,8,1e-05,0.6195255474452555

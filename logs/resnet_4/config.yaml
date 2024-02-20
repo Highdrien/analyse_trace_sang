@@ -1,0 +1,42 @@
+config_metadata: 'Saving time : 02/20/2024, 19:04:19'
+
+# data options
+data:
+    path: 'data/data_labo'
+    image_size: 256
+    num_classes: 19
+    background_classes: 4
+    transforms:
+        run_rotation: false
+        run_hflip: true
+        run_vflip: true
+        color:
+            brightness: 0.5
+            contrast: 0.5
+            saturation: 0.0
+            hue: 0.0
+
+# model options
+model:
+    name: 'resnet'
+    resnet:
+        hidden_size: 64
+        p_dropout: 0.1
+    adversarial:
+        hidden_size: 256
+        p_dropout: 0.1
+
+# learning options
+learning:
+    epochs: 10
+    batch_size: 8
+    learning_rate_resnet: 0.001
+    learning_rate_adversary: 0.001
+    shuffle: true
+    drop_last: true
+    device: 'cuda'
+    save_experiment: true
+    save_checkpoint: true
+    loss: 'crossentropy'
+    num_workers: 2
+    alpha: 10
