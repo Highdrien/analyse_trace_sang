@@ -9,7 +9,7 @@ import sys
 #add the one level up directory to the sys path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.explainable.create_mask import mask_red_pixel
+from src.explainable.create_mask import mask_red_pixel, advanced_mask_red_pixel
 from PIL import Image
 
 
@@ -35,8 +35,8 @@ def display_image_and_mask(image_path):
     print(image_path)
     image = Image.open(image_path)
     image=np.array(image)
-    mask = mask_red_pixel(image)  # Assurez-vous que cette fonction est correctement définie et importée
-    mask=mask*255
+    mask = advanced_mask_red_pixel(image)  # Pass the image array instead of the path
+    #mask=mask*255
     st.image([image, mask], width=300)
 
 # Fonction pour enregistrer l'image et son masque
@@ -51,13 +51,13 @@ def save_image_and_mask(image_path, train_dir):
 
     image = Image.open(image_path)
     image_array = np.array(image)
-    mask = mask_red_pixel(image_array)  # Pass the image array instead of the path
+    mask = advanced_mask_red_pixel(image_array)  # Pass the image array instead of the path
 
     # Ensure the mask is a 2D array with data type uint8
     mask = np.squeeze(mask).astype('uint8')
 
     #Multiply the mask by 255
-    mask=mask*255
+    #mask=mask*255
 
     mask_image = Image.fromarray(mask)  # Convert the mask back to an Image object
 
@@ -79,7 +79,7 @@ if 'image_index' in st.session_state:  # If the image index is defined
 
     if st.button('Keep'):
         print("CURRENT IMAGE PATH", st.session_state.image_paths[st.session_state.image_index])
-        save_image_and_mask(st.session_state.image_paths[st.session_state.image_index], 'train')
+        save_image_and_mask(st.session_state.image_paths[st.session_state.image_index], 'train_data_segment')
         st.session_state.image_index += 1  # Move to the next image
     if  st.button('Not Keep'):
         st.session_state.image_index += 1  # Move to the next image

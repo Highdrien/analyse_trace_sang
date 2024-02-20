@@ -2,6 +2,7 @@ import os
 import random
 import numpy as np
 from numpy import ndarray
+import traceback
 
 from PIL import Image
 from typing import Tuple
@@ -186,45 +187,26 @@ def advanced_mask_red_pixel(image: np.ndarray) -> np.ndarray:
     # Find contours using Suzuki's algorithm
     contours, _ = cv2.findContours(binary_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Draw contours on the original image
-    contour_image = np.copy(image)
     # Create an empty image to draw the contours
-   
-    cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 3)
+    mask = np.zeros_like(image)
+
+    # Draw contours on the mask
+    cv2.drawContours(mask, contours, -1, (255, 255, 255), thickness=cv2.FILLED)
+
+    #Draw the contours in green in another color on the original image
+    cv2.drawContours(image, contours, -1, (0, 255, 0), thickness=1)
 
     # Label the image
-    label_image = label(binary_image)
+    label_image = label(mask)
 
-    # Fit an ellipse to each region and draw it on the image
-
-    # Create an empty image to draw the ellipses
-    ellipse_image = np.zeros_like(image)
-        
-    for region in regionprops(label_image):
-        if region.area >= 50:
-            y0, x0 = region.centroid
-            orientation = region.orientation
-            x1 = x0 + np.cos(orientation) * 0.5 * region.minor_axis_length
-            y1 = y0 - np.sin(orientation) * 0.5 * region.minor_axis_length
-            x2 = x0 - np.sin(orientation) * 0.5 * region.major_axis_length
-            y2 = y0 - np.cos(orientation) * 0.5 * region.major_axis_length
-
-            minor_axis = max(int(abs(y1-y0)), 1)
-            major_axis = max(int(abs(x2-x0)), 1)
-
-            rr, cc = ellipse(int(y0), int(x0), minor_axis, major_axis, rotation=-orientation)
-            contour_image[rr, cc] = (255, 0, 0)
-
-    # Blend the original image and the ellipse image
-    overlay = cv2.addWeighted(image, 0.7, ellipse_image, 0.3, 0)
- 
-    # Save the result
-    cv2.imwrite('result.jpg', overlay)
-    #plot the mask and the image
+    # Plot the image and the mask
     plt.figure()
-    plt.imshow(contour_image)
+    plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    plt.imshow(mask, alpha=0.5)  # Overlay the mask with transparency
     plt.show()
 
+    # Return the mask
+    return mask
 
 
 def plot_img_and_mask(img: ndarray, mask: ndarray) -> None:
@@ -252,13 +234,27 @@ def get_random_img(data_path: str) -> ndarray:
     image = np.array(Image.open(image_path))
     return image
 
-
+def majority_vote_segmentation(image: np.ndarray, segmentation_functions: list) -> np.ndarray:
+    # Apply each segmentation function to the image and store the resulting masks
+    masks = [func(image) for func in segmentation_functions]
+    
+    # Stack the masks along the last dimension
+    stacked_masks = np.dstack(masks)
+    
+    # For each pixel, count the number of times it is marked as belonging to a segment
+    pixel_votes = np.sum(stacked_masks, axis=-1)
+    
+    # Mark the pixel as belonging to the segment if the majority of functions agree
+    majority_vote_mask = (pixel_votes > len(segmentation_functions) / 2).astype(int)
+    
+    return majority_vote_mask
 
 if __name__ == '__main__':
     test_path = os.path.join('data', 'data_labo', 'test_256')
-    image = get_random_img(test_path)
-
-    print("advanced mask red pixel",advanced_mask_red_pixel(image))
+    for k in range(10):
+        image = get_random_img(test_path)
+        mask=advanced_mask_red_pixel(image)
+        plot_img_and_mask(image, mask)
 
     # print("shape of image used",np.shape(image) )
 
