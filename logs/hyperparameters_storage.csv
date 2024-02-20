@@ -1,5 +1,8 @@
-image_size,brightness,contrast,hidden_size,p_dropout,epochs,batch_size,learning_rate_resnet,last_validation_metric
-256,0.5,0.5,64,0.1,10,8,0.01,0.8786496350364964
-256,0.5,0.5,64,0.1,10,8,0.001,0.9215328467153284
-256,0.5,0.5,64,0.1,10,8,0.0001,0.8868613138686131
-256,0.5,0.5,64,0.1,10,8,1e-05,0.6195255474452555
+logs,acc micro,acc macro,image_size,brightness,contrast,hidden_size,p_dropout,epochs,batch_size,learning_rate_resnet
+resnet_0,0.878,0.545,512,0.5,0.5,64,0.1,10,32,0.0001
+resnet_1,0.934,0.896,256,0.5,0.5,64,0.1,10,8,0.001
+resnet_2,0.842,0.782,256,0.5,0.5,64,0.1,10,8,0.01
+resnet_3,0.889,0.828,256,0.5,0.5,64,0.1,10,8,0.01
+resnet_4,0.937,0.893,256,0.5,0.5,64,0.1,10,8,0.001
+resnet_5,0.909,0.866,256,0.5,0.5,64,0.1,10,8,0.0001
+resnet_6,0.634,0.540,256,0.5,0.5,64,0.1,10,8,1e-05
