@@ -1,0 +1,11 @@
+crop avec la science map
+gradcam (++)
+scorecam (plus lent mais mielleur) -> post oc
+repo: jakob-gil
+weakly sepervise object detection
+
+sciency map: object detection pour retailler les images -> discuter avec philipe de ce qui veut
+
+meilleur fine-tun le resnet
+
+-> lui redemander des images réeles
