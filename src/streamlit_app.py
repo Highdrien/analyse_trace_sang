@@ -29,10 +29,11 @@ st.title("Image Classification App")
 st.sidebar.title("Image Transformations")
 
 # Ajoutez ces lignes après les autres contrôles de la barre latérale
-hue_min = st.sidebar.slider('Hue Min', min_value=0, max_value=180, value=0)
-hue_max = st.sidebar.slider('Hue Max', min_value=0, max_value=180, value=180)
+#hue_min = st.sidebar.slider('Hue Min', min_value=0, max_value=180, value=0)
+#hue_max = st.sidebar.slider('Hue Max', min_value=0, max_value=180, value=180)
 plot_mask = st.sidebar.checkbox('Plot Mask', value=False)
-
+# Ajoutez cette ligne après les autres contrôles de la barre latérale
+hue_range = st.sidebar.slider('Hue Range', min_value=0, max_value=180, value=(0, 180))
 
 # Path to the training data
 train_data_path = 'data/data_retouche/train_512'
@@ -92,7 +93,8 @@ if image_file is not None:
 
     # Appliquez le masque si le bouton "plot mask" est coché
     if plot_mask:
-        mask = mask_red_pixel_hsv(image_np, hue_min, hue_max)
+        #mask = mask_red_pixel_hsv(image_np, hue_min, hue_max)
+        mask = mask_red_pixel_hsv(image_np, hue_range[0], hue_range[1])
     
         # Créez une image de superposition verte avec le masque
         overlay = np.zeros_like(image_np)
