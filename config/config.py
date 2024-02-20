@@ -2,7 +2,6 @@ import os
 import yaml
 from typing import Dict, List
 from datetime import datetime
-import pandas as pd
 from easydict import EasyDict
 
 
@@ -78,28 +77,6 @@ def config_to_yaml(config: Dict, space: str='') -> str:
             config_str.append(space + key + ": " + str(value))
     return config_str
 
-def save_hyperparameters(config, csv_path, last_validation_metric):
-    hyperparameters = {
-        'image_size': config['data']['image_size'],
-        'brightness': config['data']['transforms']['color']['brightness'],
-        'contrast': config['data']['transforms']['color']['contrast'],
-        'hidden_size': config['model']['resnet']['hidden_size'],
-        'p_dropout': config['model']['resnet']['p_dropout'],
-        'epochs': config['learning']['epochs'],
-        'batch_size': config['learning']['batch_size'],
-        'learning_rate_resnet': config['learning']['learning_rate_resnet'],
-        'last_validation_metric': last_validation_metric
-    }
-
-    df = pd.DataFrame([hyperparameters])
-
-    try:
-        df_existing = pd.read_csv(csv_path)
-        df = pd.concat([df_existing, df], ignore_index=True)
-    except FileNotFoundError:
-        pass
-
-    df.to_csv(csv_path, index=False)
 
 def train_step_logger(path: str,
                       epoch: int, 
@@ -154,6 +131,4 @@ if __name__ == '__main__':
     config = EasyDict(yaml.safe_load(open(os.path.join(logging_path, 'config.yaml'))))
     #print("config:", config)
 
-    #launch save_hyperparameters function
-    save_hyperparameters(config, 'logs/hyperparameters_storage.csv', 0.85)
     

@@ -9,7 +9,7 @@ import torch
 
 sys.path.append(up(up(up(os.path.abspath(__file__)))))
 
-from config.config import train_step_logger, train_logger,save_hyperparameters
+from config.config import train_step_logger, train_logger
 from src.dataloader.dataloader import create_dataloader
 from src.metrics import Metrics
 from src.model import resnet
@@ -137,9 +137,6 @@ def train(config: EasyDict) -> None:
 
     stop_time = time.time()
     print(f"training time: {stop_time - start_time} secondes for {config.learning.epochs} epochs")
-    
-    save_hyperparameters(config, 'logs/hyperparameters_storage.csv', val_metrics[2])
-    print(f"hyperparameters saved in logs/hyperparameters_storage.csv")
 
     if save_experiment:
         plot_learning_curves.save_learning_curves(path=logging_path)
