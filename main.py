@@ -2,12 +2,14 @@ import os
 import argparse
 
 from config.config import load_config, find_config
-from src.train import train_resnet, train_adversarial, train_segmentator_v2
+# from src.train import train_resnet, train_adversarial, train_segmentator_v2
+from src.train import train_resnet
 from src import test, infer
 
 
 MODE_IMPLEMENTED = ['train', 'test', 'infer']
-MODEL_IMPLEMENTED = ['resnet', 'unet', 'adversarial']
+# MODEL_IMPLEMENTED = ['resnet', 'unet', 'adversarial']
+MODEL_IMPLEMENTED = ['resnet']
 
 
 def main(options: dict) -> None:
@@ -22,10 +24,10 @@ def main(options: dict) -> None:
 
         if config.model.name == 'resnet':
             train_resnet.train(config)
-        if config.model.name == 'adversarial':
-            train_adversarial.train(config)
-        if config.model.name == 'unet':
-            train_segmentator_v2.train(config)
+        # if config.model.name == 'adversarial':
+        #     train_adversarial.train(config)
+        # if config.model.name == 'unet':
+        #     train_segmentator_v2.train(config)
     
     # TESTING
     if options['mode'] == 'test':
