@@ -27,7 +27,13 @@ def get_transforms(transforms_config: EasyDict,
             transform.append(RandomVerticalFlip(p=0.5))
         
         if sum(transforms_config.color.values()) != 0:
-            transform.append(ColorJitter(**transforms_config.color))
+            color_config: dict[str, float] = transforms_config.color
+            kwars = dict(map(lambda key: (key, get_colorjitter_parameter(color_config[key])), color_config))
+            transform.append(ColorJitter(**kwars))
     
     transform.append(ToTensor())
     return Compose(transform)
+
+
+def get_colorjitter_parameter(value: float) -> int | tuple[float, float]:
+    return (0.5, value) if value > 0.5 else value
