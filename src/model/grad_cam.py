@@ -12,10 +12,10 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 
 sys.path.append(up(up(up(os.path.abspath(__file__)))))
 
-from src.model.resnet import Resnet
+from src.model.resnet import FineTuneResNet
 
 
-def get_saliency_map(model: Resnet,
+def get_saliency_map(model: FineTuneResNet,
                      image: np.ndarray | Tensor,
                      plot_map: bool=False,
                      return_label: bool=False
