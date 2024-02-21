@@ -1,7 +1,7 @@
 data:
   path: data/data_labo
   image_size: 256
-  num_classes: 19
+  num_classes: 18
   background_classes: 4
   transforms:
     run_rotation: false
@@ -25,7 +25,7 @@ model:
 learning:
   epochs: 10
   batch_size: 8
-  learning_rate_resnet: 0.00001 #0,0001 original
+  learning_rate_resnet: 0.0001 #0,0001 original
   learning_rate_adversary: 0.001
   shuffle: true 
   drop_last: true

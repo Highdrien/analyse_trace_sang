@@ -19,8 +19,7 @@ LABELS = ['1- Modèle Traces passives', '2- Modèle Goutte à Goutte', '3- Modè
           "7- Modèle d'Accumulation", '8- Modèle Coulée', '9- Modèle Chute de volume',
           '10- Modèle Sang Propulsé', "11- Modèle d'éjection", '12- Modèle Volume impacté',
           '13- Modèle Imprégnation', "14- Modèle Zone d'interruption", "15- Modèle Modèle d'impact",
-          "16- Modèle Foyer de modèle d'impact", '17- Modèle Trace gravitationnelle', '18- Modèle Sang expiré',
-          "19- Modèle Trace d'insecte"]
+          "16- Modèle Foyer de modèle d'impact", '17- Modèle Trace gravitationnelle', '18- Modèle Sang expiré']
 BACKGROUND = ['carrelage', 'papier', 'bois', 'lino']
 
 
