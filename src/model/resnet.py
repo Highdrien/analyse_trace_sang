@@ -88,7 +88,6 @@ def get_original_resnet(finetune_resnet: FineTuneResNet) -> ResNet:
 
     loaded_param : list[str] = []
     num_fc_layers: int = 0
-    count: int = 0
 
     for name, param in resnet.named_parameters():
         if 'fc' not in name:
@@ -114,11 +113,6 @@ def get_original_resnet(finetune_resnet: FineTuneResNet) -> ResNet:
     
     return resnet
     
-
-            
-    
-
-
 
 if __name__ == '__main__':
     import yaml
