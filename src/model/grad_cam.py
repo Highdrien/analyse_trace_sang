@@ -1,15 +1,25 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import os
+import sys
 import yaml
+import numpy as np
 from easydict import EasyDict
+import matplotlib.pyplot as plt
+from os.path import dirname as up
 
-import torch
+from torch import Tensor
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 
+sys.path.append(up(up(up(os.path.abspath(__file__)))))
+
+from src.model.resnet import Resnet
 
 
-def get_saliency_map(model, image, plot_map=False, return_label=False):
+def get_saliency_map(model: Resnet,
+                     image: np.ndarray | Tensor,
+                     plot_map: bool=False,
+                     return_label: bool=False
+                     ) -> np.ndarray | tuple[np.ndarray, Tensor]:
     """
     Generates a saliency map for the given image using the provided model.
 
@@ -26,18 +36,13 @@ def get_saliency_map(model, image, plot_map=False, return_label=False):
         If `return_label` is True, the output label is also returned as a torch.Tensor.
 
     """
-    #load the weights of the model
-    learnable_param = model.get_dict_learned_parameters()
-    #print('learnable parameters', learnable_param)
-    model.load_dict_learnable_parameters(state_dict=learnable_param, strict=True)   
-    
     # Ensure model parameters require gradients
     for param in model.parameters():
         param.requires_grad = True
 
     # Convert numpy image to torch tensor if necessary
-    if isinstance(image, np.ndarray):
-        image = torch.from_numpy(image.transpose((2, 0, 1))).unsqueeze(0).float()
+    # if isinstance(image, np.ndarray):
+    #     image = torch.from_numpy(image.transpose((2, 0, 1))).unsqueeze(0).float()
 
     # Forward pass
     output = model.forward(image)
@@ -76,29 +81,20 @@ def get_saliency_map(model, image, plot_map=False, return_label=False):
 
 
 if __name__ == '__main__':
-    import os
-    import sys
-    import yaml
-    from os.path import dirname as up
     config_path = 'config/config.yaml'   
     config = EasyDict(yaml.safe_load(open(config_path)))
 
-    sys.path.append(up(up(up(os.path.abspath(__file__)))))
-
     from src.model.resnet import get_resnet
-    from src.explainable.create_mask import get_random_img
+    from utils.get_random_image import get_random_img
 
     model = get_resnet(config)
-    for param in model.parameters():
-        param.requires_grad = True
-    print(model)
 
     #get an image:
-    im= get_random_img('data/data_labo/test_256')
-    #convert to correct shape and format for resnet
-    x = torch.from_numpy(im.transpose((2, 0, 1))).unsqueeze(0).float()
-    print("x shape:",x.shape)
+    x, label = get_random_img(image_type='torch')
+    x: Tensor = x.unsqueeze(dim=0)
+    print("x shape:", x.shape)
+    print('y_true:', label)
 
     #get the saliency map
     saliency_map = get_saliency_map(model, x, plot_map=True)
-    print("saliency_map shape:",saliency_map.shape)
+    print("saliency_map shape:", saliency_map.shape)

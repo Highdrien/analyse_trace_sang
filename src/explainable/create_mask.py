@@ -219,7 +219,7 @@ def plot_img_and_mask(img: ndarray, mask: ndarray) -> None:
     plt.show()
 
 
-def get_random_img(data_path: str) -> ndarray:
+def get_random_img(data_path: str) -> ndarray | str:
     label = random.choice(os.listdir(data_path))
     background = random.choice(os.listdir(os.path.join(data_path, label)))
     folder_path = os.path.join(data_path, label, background)
@@ -232,7 +232,7 @@ def get_random_img(data_path: str) -> ndarray:
     image_path = os.path.join(folder_path, random.choice(images))
     print(f'{image_path=}')
     image = np.array(Image.open(image_path))
-    return image
+    return image, label
 
 def majority_vote_segmentation(image: np.ndarray, segmentation_functions: list) -> np.ndarray:
     # Apply each segmentation function to the image and store the resulting masks
@@ -252,7 +252,7 @@ def majority_vote_segmentation(image: np.ndarray, segmentation_functions: list) 
 if __name__ == '__main__':
     test_path = os.path.join('data', 'data_labo', 'test_256')
     for k in range(10):
-        image = get_random_img(test_path)
+        image, _ = get_random_img(test_path)
         mask=advanced_mask_red_pixel(image)
         plot_img_and_mask(image, mask)
 
