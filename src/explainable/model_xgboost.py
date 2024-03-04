@@ -2,7 +2,6 @@ import os
 import shap
 import yaml
 import numpy as np
-from PIL import Image
 import xgboost as xgb
 from easydict import EasyDict
 import matplotlib.pyplot as plt
