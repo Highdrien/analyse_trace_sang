@@ -5,6 +5,7 @@ from torchvision.models.resnet import ResNet18_Weights
 from torch.nn import functional as F
 from itertools import chain
 
+
 class InceptionResNet(nn.Module):
     def __init__(self, num_classes=2, pretrained=True, dropout_probability=0.5, hidden_size=100):   
         super(InceptionResNet, self).__init__() # Call parent's constructor
@@ -56,6 +57,7 @@ class InceptionResNet(nn.Module):
         Returns the number of trainable parameters in the model
         """
         return sum(p.numel() for p in self.parameters() if p.requires_grad)  # Use self.parameters() instead of self.model.parameters()
+
 
 class AdversarialInceptionResNet(nn.Module):
     def __init__(self, num_classes=2, pretrained=True, dropout_probability=0.5, hidden_size=100, background_classes=4):   

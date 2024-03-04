@@ -4,6 +4,7 @@ from typing import Iterator
 from easydict import EasyDict
 from os.path import dirname as up
 
+import torch
 from torch import nn, Tensor
 from torch.nn import Parameter
 from torchvision import models
