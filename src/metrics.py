@@ -1,5 +1,4 @@
 import numpy as np
-from typing import List
 
 import torch
 from torch import Tensor
@@ -10,7 +9,7 @@ class Accuracy_per_class:
     def __init__(self, num_classes: int) -> None:
         self.num_classes = num_classes
 
-    def __call__(self, y_pred: Tensor, y_true: Tensor) -> List[float]:
+    def __call__(self, y_pred: Tensor, y_true: Tensor) -> list[float]:
         # Convert y_true to an integer tensor
         y_true = y_true.long()
 
@@ -24,7 +23,7 @@ class Accuracy_per_class:
 
         return per_label_accuracies
     
-    def get_metrics_name(self) -> List[str]:
+    def get_metrics_name(self) -> list[str]:
         metrics_name = []
         for i in range(self.num_classes):
             metrics_name.append(f'acc class n°{i + 1}')
@@ -84,7 +83,7 @@ class Metrics:
 
         return np.array(metrics_value)
     
-    def get_names(self) -> List[str]:
+    def get_names(self) -> list[str]:
         return self.metrics_name
     
     def init_metrics(self) -> np.ndarray:
