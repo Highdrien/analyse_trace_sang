@@ -19,6 +19,10 @@ model:
     hidden_size: 64
     p_dropout: 0.1
     freeze_resnet: true
+    resume_training:
+      do_resume: true
+      path: logs/resnet_7
+      freeze_param: false
   adversarial:
     hidden_size: 256
     p_dropout: 0.1
