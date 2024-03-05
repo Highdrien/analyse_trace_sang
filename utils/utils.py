@@ -1,10 +1,15 @@
 import os
 import sys
-import torch
-from typing import Any, List
+import random
+import numpy as np
+from PIL import Image
+from typing import Any, Literal
 from os.path import dirname as up
 
+import torch
+from torch import Tensor
 from torch.nn import Parameter
+from torchvision import transforms
 
 sys.path.append(up(os.path.abspath(__file__)))
 
@@ -26,7 +31,9 @@ def put_on_device(device: torch.device, *args: Any) -> None:
         arg = arg.to(device)
 
 
-def get_metrics_name_for_adv(resnet_metrics: Metrics, adv_metrics: Metrics) -> List[str]:
+def get_metrics_name_for_adv(resnet_metrics: Metrics,
+                             adv_metrics: Metrics
+                             ) -> list[str]:
     """ get all metrics name """
     add_name = lambda model_name, metric_name: f'{model_name}_{metric_name}'
     add_resnet = lambda metric_name: add_name(model_name='resnet', metric_name=metric_name)
@@ -36,39 +43,69 @@ def get_metrics_name_for_adv(resnet_metrics: Metrics, adv_metrics: Metrics) -> L
     return metrics_name
 
 
-import torch
-import os
-from torch.nn.parameter import Parameter
-from typing import Dict
-
 def load_weights(logging_path: str,
-                 model_name: str='res',
-                 device: torch.device=torch.device('cpu'),
-                 endfile: str='.pt'
-                 ) -> Dict[str, Parameter]:
+                 model_name: str = 'res',
+                 device: torch.device = torch.device('cpu'),
+                 endfile: str = '.pt'
+                 ) -> dict[str, Parameter]:
     """
     Load weights from the specified logging path for a given model.
 
     Args:
-        logging_path (str): The path where the weight files are stored.
-        model_name (str, optional): The name of the model. Defaults to 'res'.
-        device (torch.device, optional): The device to load the weights onto. Defaults to torch.device('cpu').
-        endfile (str, optional): The file extension of the weight files. Defaults to '.pt'.
+        logging_path (str):
+            The path where the weight files are stored.
+        model_name (str, optional):
+            The name of the model. Defaults to 'res'.
+        device (torch.device, optional):
+            The device to load the weights onto. Defaults to torch.device('cpu').
+        endfile (str, optional):
+            The file extension of the weight files. Defaults to '.pt'.
 
     Returns:
-        dict[str, Parameter]: A dictionary containing the loaded weights.
+        dict[str, Parameter]:
+            A dictionary containing the loaded weights.
 
     """
-    weight_files = list(filter(lambda x: x.endswith(endfile), os.listdir(logging_path)))
-    
+    weight_files = list(filter(lambda x: x.endswith(endfile),
+                               os.listdir(logging_path)))
+
     if len(weight_files) == 1:
-        weight = torch.load(os.path.join(logging_path, weight_files[0]), map_location=device)
+        weight = torch.load(os.path.join(logging_path, weight_files[0]),
+                            map_location=device)
         return weight
-    
-    model_name_files = list(filter(lambda x: model_name in x, os.listdir(logging_path)))
+
+    model_name_files = list(filter(lambda x: model_name in x,
+                                   os.listdir(logging_path)))
     if len(model_name_files) > 1:
         raise FileExistsError(f'Confused by multiple weights for the {model_name} model')
     if len(model_name_files) < 1:
         raise FileNotFoundError(f'No weights was found in {logging_path}')
-    weight = torch.load(os.path.join(logging_path, model_name_files[0]), map_location=device)
+    weight = torch.load(os.path.join(logging_path, model_name_files[0]),
+                        map_location=device)
     return weight
+
+
+def get_random_img(data_path: str = 'data/data_labo/test_256',
+                   image_type: Literal['numpy', 'torch'] = 'torch'
+                   ) -> tuple[np.ndarray | Tensor, str]:
+    """ get a random image from the test dataset """
+    label = random.choice(os.listdir(data_path))
+    background = random.choice(os.listdir(os.path.join(data_path, label)))
+    folder_path = os.path.join(data_path, label, background)
+    images = os.listdir(folder_path)
+
+    if len(images) == 0:
+        # if there are not image, find an other one
+        return get_random_img(data_path)
+
+    image_path = os.path.join(folder_path, random.choice(images))
+    print(f'{image_path=}')
+    image = Image.open(image_path)
+
+    if image_type == 'numpy':
+        image = np.array(image)
+    if image_type == 'torch':
+        transform = transforms.Compose([transforms.ToTensor()])
+        image = transform(image)
+
+    return image, label

@@ -76,19 +76,19 @@ def get_saliency_map(model: FineTuneResNet,
 
 if __name__ == '__main__':
     # config_path = 'config/config.yaml'  
-    config_path = os.path.join('logs', 'resnet_2') 
+    config_path = os.path.join('logs', 'resnet_7') 
     config = EasyDict(yaml.safe_load(open(os.path.join(config_path, 'config.yaml'))))
 
-    from src.model.resnet import get_resnet
-    from utils import utils, get_random_image
+    from src.model.finetune_resnet import get_finetuneresnet
+    from utils import utils
 
     # config_path = os.path.join('logs', 'resnet_2')
-    model = get_resnet(config)
+    model = get_finetuneresnet(config)
     weight = utils.load_weights(config_path, device=torch.device('cpu'))
     model.load_dict_learnable_parameters(state_dict=weight, strict=True)
     del weight
 
-    x, label = get_random_image.get_random_img(image_type='torch')
+    x, label = utils.get_random_img(image_type='torch')
     x: Tensor = x.unsqueeze(dim=0)
     print("x shape:", x.shape)
     print('y_true:', label)
