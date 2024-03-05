@@ -57,7 +57,7 @@ def get_saliency_map(model: FineTuneResNet,
     visualization = show_cam_on_image(rgb_img, grayscale_cam)
 
     if plot_map:
-        plt.figure(figsize=(10, 10))
+        plt.figure(figsize=(8, 8))
         plt.imshow(visualization)
         plt.show()
 
