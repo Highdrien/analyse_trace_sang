@@ -15,6 +15,7 @@ sys.path.append(up(up(os.path.abspath(__file__))))
 
 from src.model.finetune_resnet import FineTuneResNet
 from src.model.resnet import get_original_resnet
+from utils import utils
 
 
 def get_saliency_map(model: FineTuneResNet,
@@ -38,28 +39,20 @@ def get_saliency_map(model: FineTuneResNet,
         If `return_label` is True, the output label is also returned as a torch.Tensor.
 
     """
-    # Ensure model parameters require gradients
-    # for param in model.parameters():
-    #     param.requires_grad = True
-
-    # Forward pass
     output = model.forward(image)
     print(f"prédiction du resnet: {torch.argmax(output[0]).item()}")
 
-    # Identify the target layer
-    target_layer = model.resnet_begin[7][1].conv2
+    true_resnet = get_original_resnet(model) # les parametres sont tous apprenable
 
-    # cam = GradCAM(model=get_original_resnet(model), target_layers=[target_layer])
-    cam = GradCAM(model=get_original_resnet(model), target_layers=[target_layer])
+    target_layer = true_resnet.layer4[1].conv2
+    print(target_layer)
+
+    cam = GradCAM(model=true_resnet, target_layers=[target_layer])
     grayscale_cam = cam(input_tensor=image, targets=None)
 
-    # In this example grayscale_cam has only one image in the batch:
     grayscale_cam = grayscale_cam[0, :]
 
-    # Convert your input tensor to RGB image
-    rgb_img: np.ndarray = image[0].permute(1, 2, 0).numpy()
-    rgb_img = rgb_img.astype(np.float32)
-    rgb_img = (rgb_img - rgb_img.min()) / (rgb_img.max() - rgb_img.min())
+    rgb_img = utils.convert_tensor_to_rgb(image=image[0], normelize=True)
 
     visualization = show_cam_on_image(rgb_img, grayscale_cam)
 
