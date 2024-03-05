@@ -1,20 +1,19 @@
 import os
 import random
 from tqdm import tqdm
-from typing import List, Tuple
 
 import informations as info
 
 random.seed(0)
-DATA_TYPE = List[Tuple[str, str, str]]
+DATA_TYPE = list[tuple[str, str, str]]
  
 def get_data(datapath: str,
-             class_labels: List[str],
-             backgrounds: List[str],
+             class_labels: list[str],
+             backgrounds: list[str],
              only_retouche: bool=True,
-             ) -> List[Tuple[str, str, str]]:
+             ) -> list[tuple[str, str, str]]:
     """ get data
-    List of Tuple that containt image_path, label, background"""
+    list of tuple that containt image_path, label, background"""
     all_image_paths = []
     all_image_labels = []
     all_image_backgrounds = []
@@ -41,7 +40,7 @@ def split_data(data: DATA_TYPE,
                train_rate: float=0.8,
                val_rate: float=0.1,
                test_rate: float=0.1
-               ) -> Tuple[DATA_TYPE, DATA_TYPE, DATA_TYPE]:
+               ) -> tuple[DATA_TYPE, DATA_TYPE, DATA_TYPE]:
     """ split the data in 3 parts according rate proportion """
     if train_rate + val_rate + test_rate != 1:
         raise ValueError(f'train + val + test rate must be equal to 1,',

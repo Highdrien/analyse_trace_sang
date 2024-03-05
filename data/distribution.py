@@ -1,12 +1,11 @@
 import os
-from typing import List
 
 import informations as info
 
 
 def get_distribution(mode: str,
                      datapath: str=os.path.join('data', 'data_labo')
-                     ) -> List[float]:
+                     ) -> list[float]:
     datapath = os.path.join(datapath, f'{mode}_128')
     labels_distribution = []
     for label in info.LABELS:
