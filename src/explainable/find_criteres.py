@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from typing import Callable, List
+from typing import Callable
 from scipy.ndimage import center_of_mass as calculate_center_of_mass
 
 
@@ -17,13 +17,13 @@ class Critieres:
             'distrib': classify_distribution,
         }
     
-    def get_critieres_name(self) -> List[str]:
+    def get_critieres_name(self) -> list[str]:
         return self.crits.keys()
     
     def __len__(self) -> int:
         return len(self.crits)
     
-    def get_critieres(self, mask: np.ndarray) -> List[float]:
+    def get_critieres(self, mask: np.ndarray) -> list[float]:
         output = np.zeros(len(self))
         for i, function in enumerate(self.crits.values()):
             output[i] = function[mask]

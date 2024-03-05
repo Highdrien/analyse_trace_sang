@@ -1,6 +1,5 @@
 import os
 import yaml
-from typing import Dict, List
 from datetime import datetime
 from easydict import EasyDict
 
@@ -18,7 +17,7 @@ def number_folder(path: str, name: str) -> str:
     return name + str(last_index + 1)
 
 
-def train_logger(config: EasyDict, metrics_name: List[str]=None) -> str:
+def train_logger(config: EasyDict, metrics_name: list[str]=None) -> str:
     """
     creates a logs folder where we can find the config in confing.yaml and
     create train_log.csv which will contain the loss and metrics values
@@ -54,7 +53,7 @@ def train_logger(config: EasyDict, metrics_name: List[str]=None) -> str:
     return path
 
 
-def config_to_yaml(config: Dict, space: str='') -> str:
+def config_to_yaml(config: dict, space: str='') -> str:
     """
     transforms a dictionary (config) into a yaml line sequence
     """
@@ -82,8 +81,8 @@ def train_step_logger(path: str,
                       epoch: int, 
                       train_loss: float,
                       val_loss: float, 
-                      train_metrics: List[float]=[], 
-                      val_metrics: List[float]=[]
+                      train_metrics: list[float] = [], 
+                      val_metrics: list[float] = []
                       ) -> None:
     """
     writes loss and metrics values in the train_log.csv
@@ -97,7 +96,7 @@ def train_step_logger(path: str,
     file.close()
 
 
-def test_logger(path: str, metrics: List[str], values: List[float]) -> None:
+def test_logger(path: str, metrics: list[str], values: list[float]) -> None:
     """
     creates a file 'test_log.txt' in the path containing for each line: metrics[i]: values[i]
     """

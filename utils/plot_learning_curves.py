@@ -1,14 +1,13 @@
 import os
 import numpy as np
-from typing import Tuple, List
 import matplotlib.pyplot as plt
 
 
 def print_loss_and_metrics(train_loss: float,
                            val_loss: float,
-                           metrics_name: List[str],
-                           train_metrics: List[float],
-                           val_metrics: List[float]) -> None:
+                           metrics_name: list[str],
+                           train_metrics: list[float],
+                           val_metrics: list[float]) -> None:
     """ print loss and metrics for train and validation """
     print(f"{train_loss = }")
     print(f"{val_loss = }")
@@ -34,7 +33,7 @@ def save_learning_curves(path: str) -> None:
         plt.close()
 
 
-def get_result(path: str) -> Tuple[List[float], List[str]]:
+def get_result(path: str) -> tuple[list[float], list[str]]:
     with open(os.path.join(path, 'train_log.csv'), 'r') as f:
         names = f.readline()[:-1].split(',')
         result = []
