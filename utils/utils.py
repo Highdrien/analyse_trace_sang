@@ -109,3 +109,13 @@ def get_random_img(data_path: str = 'data/data_labo/test_256',
         image = transform(image)
 
     return image, label
+
+
+def convert_tensor_to_rgb(image: Tensor, normelize: bool = False) -> np.ndarray[float]:
+    """ convert a torch tensor into a numpy array
+    run a permuation in order to have an array with a shape like (256, 256, 3)"""
+    rgb_img: np.ndarray = image.permute(1, 2, 0).numpy()
+    rgb_img = rgb_img.astype(np.float32)
+    if normelize:
+        rgb_img = (rgb_img - rgb_img.min()) / (rgb_img.max() - rgb_img.min())
+    return rgb_img
