@@ -12,7 +12,7 @@ sys.path.append(up(up(up(os.path.abspath(__file__)))))
 from config.config import train_step_logger, train_logger
 from src.dataloader.dataloader import create_dataloader
 from src.metrics import Metrics
-from src.model import resnet
+from src.model import finetune_resnet
 from utils import utils, plot_learning_curves
 
 
@@ -29,14 +29,15 @@ def train(config: EasyDict) -> None:
     print(f"Found {n_train} training batches and {n_val} validation batches")
 
     # Get model
-    model = resnet.get_resnet(config)
+    model = finetune_resnet.get_finetuneresnet(config)
     model = model.to(device)
 
     # Loss
     criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
     # Optimizer and Scheduler
-    optimizer = torch.optim.Adam(model.get_learned_parameters(), lr=config.learning.learning_rate_resnet)
+    optimizer = torch.optim.Adam(model.get_learned_parameters(),
+                                 lr=config.learning.learning_rate_resnet)
 
     # Get metrics
     metrics = Metrics(num_classes=config.data.num_classes, run_argmax_on_y_true=False)
@@ -136,7 +137,7 @@ def train(config: EasyDict) -> None:
             #print(f'{best_val_loss = }')
 
     stop_time = time.time()
-    print(f"training time: {stop_time - start_time} secondes for {config.learning.epochs} epochs")
+    print(f"training time: {stop_time - start_time}s for {config.learning.epochs} epochs")
 
     if save_experiment:
         plot_learning_curves.save_learning_curves(path=logging_path)

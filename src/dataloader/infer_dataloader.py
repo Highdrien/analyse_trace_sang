@@ -1,7 +1,6 @@
 import os
 from PIL import Image
 from easydict import EasyDict
-from typing import List, Tuple
 
 from torch import Tensor
 from torchvision import transforms
@@ -18,7 +17,7 @@ class InferDataGenerator(Dataset):
             size of the image
         """
 
-        self.data: List[str] = []
+        self.data: list[str] = []
 
         if not datapath.endswith(("jpeg", "png", "jpg")):
             for dirpath, _, filenames in os.walk(datapath):
@@ -43,7 +42,7 @@ class InferDataGenerator(Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, index: int) -> Tuple[Tensor, str]:
+    def __getitem__(self, index: int) -> tuple[Tensor, str]:
         """
         # Arguments:
         index of the image to load
@@ -57,7 +56,7 @@ class InferDataGenerator(Dataset):
         return x, image_path
 
 
-def create_dataloader(config: EasyDict, datapath: str) -> DataLoader:
+def create_infer_dataloader(config: EasyDict, datapath: str) -> DataLoader:
     generator = InferDataGenerator(datapath, image_size=config.data.image_size)
     dataloader = DataLoader(
         dataset=generator,

@@ -53,8 +53,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Options
-    parser.add_argument('mode', default=None, type=str,
-                        choices=['train', 'test'])
+    parser.add_argument('--mode', '-m', default=None, type=str,
+                        choices=['train', 'test'], help='chose between train and test')
     parser.add_argument('--config_path', '-c', default=os.path.join('config', 'config.yaml'),
                         type=str, help="path to config (for training)")
     parser.add_argument('--path', '-p', type=str,

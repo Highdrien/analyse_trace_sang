@@ -1,28 +1,21 @@
-import streamlit as st
 import os
-import argparse
-from PIL import Image
-from torchvision import transforms
-from easydict import EasyDict
-import torch
 import sys
-from torch import Tensor
 import cv2
+import numpy as np
+import streamlit as st
+from os.path import dirname as up
+from PIL import Image, ImageEnhance
 
-#add the one level up directory to the sys path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import torch
+from torchvision import transforms
 
-from config.config import load_config, find_config
-#from src.train import train_adversarial, test
-from config.config import test_logger
+sys.path.append(up(up(os.path.abspath(__file__))))
+
+from src.model import resnet
 from src.dataloader.dataloader import LABELS
 from src.explainable.create_mask import mask_red_pixel_hsv
-from metrics import Metrics
-from src.model import resnet
 from utils import utils
-import numpy as np
-from src.infer import infer
-from PIL import ImageEnhance
+from config.config import load_config
 
 st.title("Image Classification App")
 

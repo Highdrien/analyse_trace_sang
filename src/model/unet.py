@@ -2,6 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+
 class UNet(nn.Module):
     def __init__(self):
         super(UNet, self).__init__()
@@ -38,6 +39,7 @@ class UNet(nn.Module):
     def count_parameters(self):
         return sum(p.numel() for p in self.parameters())
 
+
 class Classifier(nn.Module):
     def __init__(self, num_classes):
         super(Classifier, self).__init__()
@@ -55,6 +57,7 @@ class Classifier(nn.Module):
     
     def count_parameters(self):
         return sum(p.numel() for p in self.parameters()) 
+    
     
 if __name__ == "__main__":
     # Create a random tensor representing a batch of images with size 128x128 and 3 channels

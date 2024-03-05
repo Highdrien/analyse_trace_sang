@@ -14,7 +14,7 @@ sys.path.append(up(up(up(os.path.abspath(__file__)))))
 
 from src.explainable.create_mask import batched_segmentation
 from src.dataloader.dataloader import create_dataloader
-from src.model.segmentation_model import UNet, Classifier
+from src.model.unet import UNet, Classifier
 from utils import utils
 
 

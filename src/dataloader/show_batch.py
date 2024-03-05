@@ -13,7 +13,7 @@ def plot_batch(x: Tensor) -> None:
     for i in range(num_images):
         row = i // cols
         col = i % cols
-        img = x[i].numpy().transpose((1, 2, 0))  # Tensor (C, H, W) to (H, W, C)
+        img = x[i].numpy().transpose((1, 2, 0))
         axes[row, col].imshow(img)
         axes[row, col].axis("off")
 

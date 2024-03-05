@@ -3,7 +3,6 @@ import sys
 from tqdm import tqdm
 from easydict import EasyDict
 from os.path import dirname as up
-from icecream import ic
 
 import torch
 from torch import Tensor
@@ -13,7 +12,7 @@ sys.path.append(up(os.path.abspath(__file__)))
 from config.config import test_logger
 from src.dataloader.dataloader import create_dataloader
 from metrics import Metrics
-from src.model import resnet
+from src.model import finetune_resnet
 from utils import utils
 
 
@@ -26,7 +25,7 @@ def test(config: EasyDict, logging_path: str) -> None:
     n_test = len(test_generator)
 
     # Get model
-    model = resnet.get_resnet(config)
+    model = finetune_resnet.get_finetuneresnet(config)
     weight = utils.load_weights(logging_path, device=device)
     model.load_dict_learnable_parameters(state_dict=weight, strict=True)
     model = model.to(device)

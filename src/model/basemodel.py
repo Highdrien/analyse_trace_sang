@@ -1,4 +1,4 @@
-from typing import Iterator, Tuple
+from typing import Iterator
 
 import torch
 from torch import nn
@@ -20,7 +20,7 @@ class Model(nn.Module):
             if param.requires_grad:
                 yield param
     
-    def get_name_learned_parameters(self) -> Iterator[Tuple[str, Parameter]]:
+    def get_name_learned_parameters(self) -> Iterator[tuple[str, Parameter]]:
         """ get name and parameters st param is leanable"""
         for name, param in self.named_parameters():
             if param.requires_grad:
