@@ -3,6 +3,7 @@ import sys
 import random
 import numpy as np
 from PIL import Image
+from easydict import EasyDict
 from typing import Any, Literal
 from os.path import dirname as up
 
@@ -119,3 +120,26 @@ def convert_tensor_to_rgb(image: Tensor, normelize: bool = False) -> np.ndarray[
     if normelize:
         rgb_img = (rgb_img - rgb_img.min()) / (rgb_img.max() - rgb_img.min())
     return rgb_img
+
+
+def resume_training(config: EasyDict, model: torch.nn.Module) -> None:
+    if 'resume_training' not in config.model.resnet.keys():
+        print("didn't find resume_training key")
+        return None
+
+    resume_training: EasyDict = config.model.resnet.resume_training
+    if not resume_training.do_resume:
+        print("resume training: None")
+        return None
+
+    print(f'resume training from {resume_training.path}')
+    weight = load_weights(resume_training.path)
+    model.load_dict_learnable_parameters(state_dict=weight, strict=True)
+    del weight
+
+    if not resume_training.freeze_param:
+        print('unfreezing the parameters')
+        for param in model.parameters():
+            param.requires_grad = True
+
+    return None
