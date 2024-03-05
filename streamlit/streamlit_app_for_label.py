@@ -1,20 +1,14 @@
-import streamlit as st
 import os
-import numpy as np
-
-from PIL import Image
-import shutil
 import sys
+import shutil
+import numpy as np
+import streamlit as st
+from PIL import Image
+from os.path import dirname as up
 
-#add the one level up directory to the sys path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(up(up(os.path.abspath(__file__))))
 
 from src.explainable.create_mask import mask_red_pixel, advanced_mask_red_pixel
-from PIL import Image
-
-
-import sys
-
 
 
 #from src.train import train_adversarial, test

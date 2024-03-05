@@ -11,9 +11,10 @@ from torch import Tensor
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 
-sys.path.append(up(up(up(os.path.abspath(__file__)))))
+sys.path.append(up(up(os.path.abspath(__file__))))
 
-from src.model.resnet import FineTuneResNet, get_original_resnet
+from src.model.finetune_resnet import FineTuneResNet
+from src.model.resnet import get_original_resnet
 
 
 def get_saliency_map(model: FineTuneResNet,
@@ -48,6 +49,7 @@ def get_saliency_map(model: FineTuneResNet,
     # Identify the target layer
     target_layer = model.resnet_begin[7][1].conv2
 
+    # cam = GradCAM(model=get_original_resnet(model), target_layers=[target_layer])
     cam = GradCAM(model=get_original_resnet(model), target_layers=[target_layer])
     grayscale_cam = cam(input_tensor=image, targets=None)
 
@@ -73,15 +75,20 @@ def get_saliency_map(model: FineTuneResNet,
 
 
 if __name__ == '__main__':
-    config_path = 'config/config.yaml'   
-    config = EasyDict(yaml.safe_load(open(config_path)))
+    # config_path = 'config/config.yaml'  
+    config_path = os.path.join('logs', 'resnet_2') 
+    config = EasyDict(yaml.safe_load(open(os.path.join(config_path, 'config.yaml'))))
 
     from src.model.resnet import get_resnet
-    from utils.get_random_image import get_random_img
+    from utils import utils, get_random_image
 
+    # config_path = os.path.join('logs', 'resnet_2')
     model = get_resnet(config)
+    weight = utils.load_weights(config_path, device=torch.device('cpu'))
+    model.load_dict_learnable_parameters(state_dict=weight, strict=True)
+    del weight
 
-    x, label = get_random_img(image_type='torch')
+    x, label = get_random_image.get_random_img(image_type='torch')
     x: Tensor = x.unsqueeze(dim=0)
     print("x shape:", x.shape)
     print('y_true:', label)
