@@ -30,7 +30,9 @@ def train(config: EasyDict) -> None:
 
     # Get model
     model = finetune_resnet.get_finetuneresnet(config)
+    utils.resume_training(config=config, model=model)
     model = model.to(device)
+    print(f"number of trainable parameters {model.get_number_learnable_parameters()}")
 
     # Loss
     criterion = torch.nn.CrossEntropyLoss(reduction='mean')

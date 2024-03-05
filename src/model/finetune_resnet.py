@@ -18,7 +18,8 @@ class FineTuneResNet(Model):
                  num_classes: int,
                  hidden_size: int,
                  p_dropout: float,
-                 freeze_resnet: bool = True
+                 freeze_resnet: bool = True,
+                 **kwargs
                  ) -> None:   
         super(FineTuneResNet, self).__init__()
 
