@@ -9,7 +9,7 @@ from torch import Tensor
 
 sys.path.append(up(os.path.abspath(__file__)))
 
-from config.config import test_logger
+from config.utils import test_logger
 from src.dataloader.dataloader import create_dataloader
 from metrics import Metrics
 from src.model import finetune_resnet

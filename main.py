@@ -1,7 +1,7 @@
 import os
 import argparse
 
-from config.config import load_config, find_config
+from config.utils import load_config, find_config
 # from src.train import train_resnet, train_adversarial, train_segmentator_v2
 from src.train import train_resnet
 from src import test, infer

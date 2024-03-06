@@ -1,7 +1,13 @@
 import os
+import sys
 import yaml
 from datetime import datetime
 from easydict import EasyDict
+from os.path import dirname as up
+
+sys.path.append(up(os.path.abspath(__file__)))
+
+from get_config_name import get_config_name
 
 
 def number_folder(path: str, name: str) -> str:
@@ -25,7 +31,7 @@ def train_logger(config: EasyDict, metrics_name: list[str]=None) -> str:
     path = 'logs'
     if not os.path.exists(path):
         os.makedirs(path)
-    folder_name = number_folder(path, config.model.name + '_')
+    folder_name = number_folder(path, name=f'{get_config_name(config)}_')
     path = os.path.join(path, folder_name)
     os.mkdir(path)
     print(f'{path = }')
@@ -98,7 +104,8 @@ def train_step_logger(path: str,
 
 def test_logger(path: str, metrics: list[str], values: list[float]) -> None:
     """
-    creates a file 'test_log.txt' in the path containing for each line: metrics[i]: values[i]
+    creates a file 'test_log.txt' in the path
+    containing for each line: metrics[i]: values[i]
     """
     with open(os.path.join(path, 'test_log.txt'), 'a', encoding='utf8') as f:
         for i in range(len(metrics)):
@@ -113,7 +120,8 @@ def load_config(path: str='config/config.yaml') -> EasyDict:
 
 def find_config(experiment_path: str) -> str:
     """ find the .yaml file in a folder and return the .yaml path """
-    yaml_in_path = list(filter(lambda x: x[-5:] == '.yaml', os.listdir(experiment_path)))
+    yaml_in_path = list(filter(lambda x: x[-5:] == '.yaml',
+                               os.listdir(experiment_path)))
 
     if len(yaml_in_path) == 1:
         return os.path.join(experiment_path, yaml_in_path[0])
