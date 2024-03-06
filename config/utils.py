@@ -23,23 +23,24 @@ def number_folder(path: str, name: str) -> str:
     return name + str(last_index + 1)
 
 
-def train_logger(config: EasyDict, metrics_name: list[str]=None) -> str:
+def train_logger(config: EasyDict,
+                 metrics_name: list[str] = None,
+                 logspath: str = 'logs') -> str:
     """
     creates a logs folder where we can find the config in confing.yaml and
     create train_log.csv which will contain the loss and metrics values
     """
-    path = 'logs'
-    if not os.path.exists(path):
-        os.makedirs(path)
-    folder_name = number_folder(path, name=f'{get_config_name(config)}_')
-    path = os.path.join(path, folder_name)
-    os.mkdir(path)
-    print(f'{path = }')
+    if not os.path.exists(logspath):
+        os.makedirs(logspath)
+    folder_name = number_folder(logspath, name=f'{get_config_name(config)}_')
+    logging_path = os.path.join(logspath, folder_name)
+    os.mkdir(logging_path)
+    print(f'{logging_path = }')
 
     if metrics_name is None:
         metrics_name = list(filter(lambda x: config.metrics[x], config.metrics))
     # create train_log.csv where save the metrics
-    with open(os.path.join(path, 'train_log.csv'), 'w') as f:
+    with open(os.path.join(logging_path, 'train_log.csv'), 'w') as f:
         first_line = 'step,' + config.learning.loss + ',val ' + config.learning.loss
         for metric in metrics_name:
             first_line += ',' + metric
@@ -48,7 +49,7 @@ def train_logger(config: EasyDict, metrics_name: list[str]=None) -> str:
     f.close()
 
     # copy the config
-    with open(os.path.join(path, 'config.yaml'), 'w') as f:
+    with open(os.path.join(logging_path, 'config.yaml'), 'w') as f:
         now = datetime.now()
         date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
         f.write("config_metadata: 'Saving time : " + date_time + "'\n")
@@ -56,7 +57,7 @@ def train_logger(config: EasyDict, metrics_name: list[str]=None) -> str:
             f.write(line + '\n')
     f.close()
 
-    return path
+    return logging_path
 
 
 def config_to_yaml(config: dict, space: str='') -> str:
@@ -131,7 +132,8 @@ def find_config(experiment_path: str) -> str:
     
     if len(yaml_in_path) > 0:
         raise FileNotFoundError("ERROR: a lot a .yaml was found in", experiment_path)
-    
+
+
 if __name__ == '__main__':
     #load easydict
     logging_path = 'logs/resnet_0'

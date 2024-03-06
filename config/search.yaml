@@ -1,0 +1,13 @@
+data:
+  transforms:
+    run_rotation: [false, true]
+    color:
+      brightness: [0.5, 2]
+      contrast: 2
+
+model:
+  resnet:
+    hidden_size: [64, 128]
+
+learning:
+  learning_rate_resnet: [0.001, 0.0001]
