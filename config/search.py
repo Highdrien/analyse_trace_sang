@@ -28,7 +28,6 @@ class Search:
         print('\n---- ITEMS POSSIBILITIES ----')
         for item in self.items:
             print(item)
-        print('')
 
         self.len: int = 1
         for item in self.items:
@@ -44,7 +43,10 @@ class Search:
             if type(value) == EasyDict:
                 self.get_all_item(value, new_keys)
             elif type(value) == list:
-                self.items.append(Item(key=new_keys, possibles_values=value))
+                self.items.append(Item(keys=new_keys, possibles_values=value))
+    
+    def get_new_config(self) -> EasyDict:
+        raise NotImplementedError
     
     def __len__(self) -> int:
         return self.len
@@ -54,45 +56,52 @@ class RandomSearch(Search):
     def __init__(self, config_yaml_file: str, search_yaml_file: str) -> None:
         super().__init__(config_yaml_file, search_yaml_file)
     
-    def copy_and_change_config(self, search: EasyDict, keys: list[str] = []) -> None:
-        for key, value in search.items():
-            new_keys: list[str] = keys + [key]
-            if type(value) == EasyDict:
-                self.get_all_item(value, new_keys)
-            elif type(value) == list:
-                self.items.append(Item(key=new_keys, possibles_values=value))
-        
+    def get_new_config(self) -> EasyDict:
+        config = copy.copy(self.config)
+        for item in self.items:
+            item.change_config(config, index_value=None)
+        return EasyDict(config)
         
 
-
-    
 @dataclass
 class Item:
-    key: list[str]                  # key path: config[key[0]][key[1]]... to get the item
+    keys: list[str]                 # keys path: config[key[0]][key[1]]... to get the item
     possibles_values: list[Any]     # possibles values for the item
     
     def get_value(self, index_value: int = None) -> Any:
         """ get a index_value of possibles_value 
         if index_value is None -> take an random possibles value"""
 
-        if not (0 < index_value < len(self)):
-            raise ValueError('index_value out of range. '
-                             f'{index_value = } but {len(self) = }')
-
         if index_value is None:
             index_value = random.randint(0, len(self) -1)
+
+        if not (0 <= index_value < len(self)):
+            raise ValueError('index_value out of range. '
+                             f'{index_value = } but {len(self) = }')
         
         return self.possibles_values[index_value]
+    
+    def change_config(self, config: dict, index_value: int = None) -> None:
+        aux: dict = config
+        for key in self.keys[:-1]:
+            aux = aux[key]
+        aux = self.get_value(index_value)
+        return config
     
     def __len__(self) -> int:
         return len(self.possibles_values)
     
     def __repr__(self) -> str:
-        return f'{str(self.key):<50} : {self.possibles_values}'
+        return f'{str(self.keys):<50} : {self.possibles_values}'
 
 
 if __name__ == '__main__':
-    search = Search(config_yaml_file=os.path.join('config', 'config.yaml'),
-                    search_yaml_file=os.path.join('config', 'search.yaml'))
+    # search = Search(config_yaml_file=os.path.join('config', 'config.yaml'),
+    #                 search_yaml_file=os.path.join('config', 'search.yaml'))
+    
+    rs = RandomSearch(config_yaml_file=os.path.join('config', 'config.yaml'),
+                      search_yaml_file=os.path.join('config', 'search.yaml'))
+    
+    config = rs.get_new_config()
 
     
