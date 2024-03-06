@@ -15,7 +15,7 @@ from src.model import resnet
 from src.dataloader.dataloader import LABELS
 from src.explainable.create_mask import mask_red_pixel_hsv
 from utils import utils
-from config.config import load_config
+from config.utils import load_config
 
 st.title("Image Classification App")
 

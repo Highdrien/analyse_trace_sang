@@ -20,7 +20,7 @@ model:
     p_dropout: 0.1
     freeze_resnet: true
     resume_training:
-      do_resume: true
+      do_resume: false
       path: logs/resnet_7
       freeze_param: false
   adversarial:

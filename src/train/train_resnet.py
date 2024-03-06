@@ -9,7 +9,7 @@ import torch
 
 sys.path.append(up(up(up(os.path.abspath(__file__)))))
 
-from config.config import train_step_logger, train_logger
+from config.utils import train_step_logger, train_logger
 from src.dataloader.dataloader import create_dataloader
 from src.metrics import Metrics
 from src.model import finetune_resnet
