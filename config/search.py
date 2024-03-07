@@ -1,16 +1,24 @@
 import os
+import sys
 import yaml
 import copy
 import random
 from typing import Any
 from easydict import EasyDict
 from dataclasses import dataclass
+from os.path import dirname as up
+
+sys.path.append(up(os.path.abspath(__file__)))
+
+from config.utils import number_folder
 
 
 class Search:
     def __init__(self,
                  config_yaml_file: str,
-                 search_yaml_file: str
+                 search_yaml_file: str,
+                 logspath: str,
+                 name: str,
                  ) -> None:
         if not os.path.exists(config_yaml_file):
             raise FileNotFoundError(config_yaml_file)
@@ -19,6 +27,8 @@ class Search:
         
         self.config = self.loadyaml(config_yaml_file)
         search = self.loadyaml(search_yaml_file)
+        self.logspath = logspath
+        self.name = name
 
         self.items: list[Item] = []
         self.get_all_item(search)
@@ -33,6 +43,11 @@ class Search:
         for item in self.items:
             self.len *= len(item)
         print(f'{self.len} possibilities')
+
+        folder_name = number_folder(path=self.logspath, name=f'{self.name}_')
+        self.folder_name = os.path.join(self.logspath, folder_name)
+        os.mkdir(self.folder_name)
+        print(f'create folder: {self.folder_name}')
     
     def loadyaml(self, yaml_file: str) -> EasyDict:
         return EasyDict(yaml.safe_load(open(yaml_file, 'r')))
@@ -48,13 +63,23 @@ class Search:
     def get_new_config(self) -> EasyDict:
         raise NotImplementedError
     
+    def get_directory(self) -> str:
+        return self.folder_name
+    
     def __len__(self) -> int:
         return self.len
     
 
 class RandomSearch(Search):
-    def __init__(self, config_yaml_file: str, search_yaml_file: str) -> None:
-        super().__init__(config_yaml_file, search_yaml_file)
+    def __init__(self,
+                 config_yaml_file: str = os.path.join('config', 'config.yaml'),
+                 search_yaml_file: str = os.path.join('config', 'search.yaml'),
+                 logspath: str = 'logs'
+                 ) -> None:
+        super().__init__(config_yaml_file,
+                         search_yaml_file,
+                         logspath=logspath,
+                         name='random_search')
     
     def get_new_config(self) -> EasyDict:
         config = copy.copy(self.config)
@@ -103,5 +128,4 @@ if __name__ == '__main__':
                       search_yaml_file=os.path.join('config', 'search.yaml'))
     
     config = rs.get_new_config()
-
     

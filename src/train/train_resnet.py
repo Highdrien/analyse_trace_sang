@@ -16,7 +16,9 @@ from src.model import finetune_resnet
 from utils import utils, plot_learning_curves
 
 
-def train(config: EasyDict) -> None:
+def train(config: EasyDict,
+          logspath: str = 'logs'
+          ) -> None:
     if config.model.name != 'resnet':
         raise ValueError(f"Expected model.name=resnet but found {config.model.name}.")
     
@@ -49,7 +51,9 @@ def train(config: EasyDict) -> None:
     save_experiment = config.learning.save_experiment
     print(f'{save_experiment = }')
     if save_experiment:
-        logging_path = train_logger(config, metrics_name=metrics.get_names())
+        logging_path = train_logger(config,
+                                    metrics_name=metrics.get_names(),
+                                    logspath=logspath)
         best_val_loss = 10e6
 
 

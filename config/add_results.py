@@ -1,8 +1,7 @@
 import os
 import yaml
-from easydict import EasyDict
 
-hyperparameters: dict[str, list[str]] = {
+HYPERPARAMETERS: dict[str, list[str]] = {
         'image_size': ['data', 'image_size'],
         'brightness': ['data', 'transforms', 'color', 'brightness'],
         'contrast': ['data', 'transforms', 'color', 'contrast'],
@@ -17,21 +16,12 @@ hyperparameters: dict[str, list[str]] = {
 def create_csv_with_all_test_metrics(csv_output: str='hyperparameters_storage.csv',
                                      logs_path: str='logs',
                                      test_file_name: str= 'test_log.txt',
-                                     config_name: str= 'config.yaml'
+                                     config_name: str= 'config.yaml',
+                                     hyperparameters: dict[str, list[str]] = HYPERPARAMETERS
                                      ) -> None:
     logs_with_test = get_logs_with_test(logs_path, test_file_name)
 
     metrics_name = ['acc micro', 'acc macro']
-    hyperparameters: dict[str, list[str]] = {
-        'image_size': ['data', 'image_size'],
-        'brightness': ['data', 'transforms', 'color', 'brightness'],
-        'contrast': ['data', 'transforms', 'color', 'contrast'],
-        'hidden_size': ['model', 'resnet', 'hidden_size'],
-        'p_dropout': ['model', 'resnet', 'p_dropout'],
-        'epochs': ['learning', 'epochs'],
-        'batch_size': ['learning', 'batch_size'],
-        'learning_rate_resnet': ['learning', 'learning_rate_resnet'],
-    }
 
     all_test_results: str = 'logs,' + list_into_str(metrics_name) + ',' + \
                             list_into_str(hyperparameters.keys()) + '\n'
