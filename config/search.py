@@ -16,21 +16,24 @@ from config.utils import number_folder
 
 class Search:
     def __init__(self,
-                 config_yaml_file: str,
-                 search_yaml_file: str,
-                 logspath: str,
-                 name: str,
+                 config_yaml_file: str = os.path.join('config', 'config.yaml'),
+                 search_yaml_file: str = os.path.join('config', 'search.yaml'),
+                 logspath: str = 'logs',
+                 name: str = 'random_search',
                  ) -> None:
+        
         if not os.path.exists(config_yaml_file):
             raise FileNotFoundError(config_yaml_file)
         if not os.path.exists(search_yaml_file):
             raise FileNotFoundError(search_yaml_file)
         
+        # Get yaml file
         self.config = self.__loadyaml(config_yaml_file)
         search = self.__loadyaml(search_yaml_file)
         self.logspath = logspath
         self.name = name
 
+        # Get all items
         self.items: list[Item] = []
         self.__get_all_item(search)
         if self.items == []:
@@ -40,6 +43,7 @@ class Search:
         for item in self.items:
             print(item)
 
+        # Get the list of the possibilities
         self.len: int = 1
         self.possibilities: list[int] = []
         for item in self.items:
@@ -49,15 +53,16 @@ class Search:
         print(f'{self.len} possibilities')
         self.all_possibilities = self.__get_all_possibilities()
 
+        # Create folder to logs the experiments
         folder_name = number_folder(path=self.logspath, name=f'{self.name}_')
         self.folder_name = os.path.join(self.logspath, folder_name)
         os.mkdir(self.folder_name)
         print(f'create folder: {self.folder_name}')
 
+        # Get the suffle the index corresponding to the possibilities
         self.indexes: list[int] = list(range(0, len(self)))
         random.shuffle(self.indexes)
         self.index: int = -1
-        print(f'{len(self.all_possibilities) = }')
 
     def get_new_config(self) -> EasyDict:
         self.__update_index()
@@ -98,37 +103,6 @@ class Search:
         return self.len
     
 
-# class RandomSearch(Search):
-#     def __init__(self,
-#                  config_yaml_file: str = os.path.join('config', 'config.yaml'),
-#                  search_yaml_file: str = os.path.join('config', 'search.yaml'),
-#                  logspath: str = 'logs'
-#                  ) -> None:
-#         super().__init__(config_yaml_file,
-#                          search_yaml_file,
-#                          logspath=logspath,
-#                          name='random_search')
-        
-#         self.indexes: list[int] = list(range(0, len(self)))
-#         random.shuffle(self.indexes)
-#         self.index: int = -1
-#         print(f'{len(self.all_possibilities) = }')
-    
-#     def get_new_config(self) -> EasyDict:
-#         self.update_index()
-#         config = copy.copy(self.config)
-#         possibility: list[int] = self.all_possibilities[self.index]
-
-#         for item_number, item in enumerate(self.items):
-#             item.change_config(config, index_value=possibility[item_number])
-                
-#         return EasyDict(config)
-    
-    # def update_index(self) -> None:
-    #     self.index += 1
-    #     if self.index == len(self):
-    #         raise ValueError('fin du parcours')
-        
 
 @dataclass
 class Item:

@@ -2,7 +2,7 @@ import os
 import argparse
 
 from config.utils import load_config, find_config
-from config.search import RandomSearch
+from config.search import Search
 # from src.train import train_resnet, train_adversarial, train_segmentator_v2
 from src.train import train_resnet
 from src import test, infer
@@ -34,9 +34,10 @@ def main(options: dict) -> None:
         #     train_segmentator_v2.train(config)
     
     if options['mode'] == 'random_search':
-        random_search = RandomSearch(config_yaml_file=options['config_path'])
+        random_search = Search(config_yaml_file=options['config_path'], name='random_search')
+        num_run: int = max(options['num_run'], len(random_search))
 
-        for n_run in range(options['num_run']):
+        for n_run in range(num_run):
             print(f"\nexperiment n°{n_run + 1}/{options['num_run']}\n")
             config = random_search.get_new_config()
             if config.model.name == 'resnet':
